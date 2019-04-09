@@ -1,0 +1,114 @@
+omg: 1
+lifecycle:
+  startup:
+    command: ["microservice-mail"]
+info:
+  version: 1.0.0
+  title: mail
+  description: This is a mail service
+  contact:
+    name: Rohit Shetty
+    url: https://github.com/ht68rohit
+    email: rohits@heaptrace.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+actions:
+  send:
+    help: Send email
+    http:
+      port: 3000
+      method: post
+      path: /send
+      contentType: application/json
+    arguments:
+      from: 
+        type: string
+        in: requestBody
+        required: true
+        help: The sender email address.
+      password:
+        type: string
+        in: requestBody
+        required: true
+        help: The password of sender mail account.
+      to: 
+        type: string
+        in: requestBody
+        required: true
+        help: The receiver end
+      subject: 
+        type: string
+        in: requestBody
+        required: true
+        help: The subject of email message
+      message:
+        type: string
+        in: requestBody
+        required: true
+        help: The message body of email
+      smtp_host:
+        type: string
+        in: requestBody
+        required: true
+        help: The SMTP host
+      smtp_port:
+        type: string
+        in: requestBody
+        required: true
+        help: The port number for SMTP
+    output:   
+      type: string
+      contentType: application/json
+      properties:
+        success:
+          help: Returns true or false.
+          type: string
+        message:
+          help: Success message or error message if occurred.
+          type: string
+        status_code:
+          help: Http status code.
+          type: int
+  receive:
+    help: Start receiving  emails
+    events:
+      hears:
+        help: Triggered anytime when any new email is occurred in mail inbox
+        arguments: 
+          username:
+            type: string
+            in: requestBody
+            required: true
+            help: The email of mail account
+          password:
+            type: string
+            in: requestBody
+            required: true
+            help: The password of mail account
+        http: 
+          port: 3000
+          subscribe:
+            method: post
+            path: /receive
+            contentType: application/json
+          unsubscribe:
+            path: /unsubscribe
+            method: post
+            contentType: application/json
+        output: 
+          contentType: application/json
+          type: object
+          properties:
+            event_type:
+              help: The type of event called
+              type: string
+            content_type:
+              help: The content type of method
+              type: string
+            event_id:
+              help: The event ID
+              type: string
+            data:
+              help: The message payload returned by telegram
+              type: object    
