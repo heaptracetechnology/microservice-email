@@ -1,15 +1,20 @@
 package messaging
 
 import (
+	b "bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
+	"github.com/emersion/go-message/mail"
 	result "github.com/heaptracetechnology/microservice-mail/result"
-	//"io/ioutil"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/smtp"
+	"regexp"
+	"time"
 )
 
 type Email struct {
@@ -22,20 +27,33 @@ type Email struct {
 	SMTPPort string `json:"smtp_port,omitempty"`
 }
 
+type Payload struct {
+	EventId     string       `json:"eventID"`
+	EventType   string       `json:"eventType"`
+	ContentType string       `json:"contentType"`
+	Data        EmailMessage `json:"data"`
+}
+
+type EmailMessage struct {
+	Subject string          `json:"subject"`
+	From    []*mail.Address `json:"from"`
+	Message string          `json:"message"`
+}
+
 type Subscribe struct {
-	Data     Data   `json:"data"`
-	Endpoint string `json:"endpoint"`
-	Id       string `json:"id"`
+	Data          RequestParam `json:"data"`
+	Endpoint      string       `json:"endpoint"`
+	Id            string       `json:"id"`
+	LastMessageId uint32
+	IsTesting     bool `json:"istesting"`
 }
 
-type Data struct {
+type RequestParam struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-}
-
-type Received struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Pattern  string `json:"pattern"`
+	ImapHost string `json:"imap_host"`
+	ImapPort string `json:"imap_port"`
 }
 
 type Message struct {
@@ -43,6 +61,11 @@ type Message struct {
 	Message    string `json:"message"`
 	StatusCode int    `json:"statuscode"`
 }
+
+var Listener = make(map[string]Subscribe)
+var rtmStarted bool
+var newMail *imap.Message
+var newClient *client.Client
 
 //Send Email
 func Send(responseWriter http.ResponseWriter, request *http.Request) {
@@ -76,52 +99,66 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 }
 
 //Receive Email
-func Receive(responseWriter http.ResponseWriter, request *http.Request) {
-
-	// req, _ := json.Marshal(request.Body)
-	// fmt.Println("req :: ", req)
-
-	// var param Received
-
-	// body, err := ioutil.ReadAll(request.Body)
-	// if err != nil {
-	// 	fmt.Println("err ::", err)
-	// }
-	// defer request.Body.Close()
-	// er := json.Unmarshal(body, &param)
-	// if er != nil {
-	// 	fmt.Println("er ::", er)
-	// }
+func Receive1(responseWriter http.ResponseWriter, request *http.Request) {
 
 	decoder := json.NewDecoder(request.Body)
-	var param Received
-	decodeErr := decoder.Decode(&param)
-	if decodeErr != nil {
-		result.WriteErrorResponse(responseWriter, decodeErr)
+
+	var sub Subscribe
+	decodeError := decoder.Decode(&sub)
+	if decodeError != nil {
+		result.WriteErrorResponse(responseWriter, decodeError)
 		return
 	}
+
 	log.Println("Connecting to server...")
 
-	c, err := client.DialTLS("imap.gmail.com:993", nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	newClient, _ = client.DialTLS(sub.Data.ImapHost+":"+sub.Data.ImapPort, nil)
+
 	log.Println("Connected")
 
-	defer c.Logout()
-
-	username := "demot636@gmail.com"
-	password := "Test@123"
-
-	if err := c.Login(username, password); err != nil {
+	if err := newClient.Login(sub.Data.Username, sub.Data.Password); err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Logged in")
 
+	res2, _ := json.Marshal(sub)
+	fmt.Println(string(res2))
+
+	Listener[sub.Data.Username] = sub
+	if !rtmStarted {
+		go MailRTM()
+		rtmStarted = true
+	}
+
+	bytes, _ := json.Marshal("Subscribed")
+	result.WriteJsonResponse(responseWriter, bytes, http.StatusOK)
+}
+
+func MailRTM() {
+	isTest := false
+	for {
+		if len(Listener) > 0 {
+			for k, v := range Listener {
+				go getMessageUpdates(k, v)
+				isTest = v.IsTesting
+			}
+		} else {
+			rtmStarted = false
+			break
+		}
+		time.Sleep(5 * time.Second)
+		if isTest == true {
+			break
+		}
+	}
+}
+
+func getMessageUpdates(userid string, sub Subscribe) {
+
 	mailboxes := make(chan *imap.MailboxInfo, 10)
 	done := make(chan error, 1)
 	go func() {
-		done <- c.List("", "*", mailboxes)
+		done <- newClient.List("", "*", mailboxes)
 	}()
 
 	log.Println("Mailboxes:")
@@ -133,39 +170,108 @@ func Receive(responseWriter http.ResponseWriter, request *http.Request) {
 		log.Fatal(err)
 	}
 
-	mbox, err := c.Select("INBOX", false)
+	mBox, err := newClient.Select("INBOX", false)
+	var data EmailMessage
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Flags for INBOX:", mbox.Flags)
 
-	// Get the last 4 messages
-	from := uint32(1)
-	to := mbox.Messages
-	if mbox.Messages > 3 {
-		from = mbox.Messages - 3
+	if mBox.Messages == 0 {
+		log.Fatal("No message in mailbox")
 	}
-	seqset := new(imap.SeqSet)
-	seqset.AddRange(from, to)
+	seqSet := new(imap.SeqSet)
+	seqSet.AddNum(mBox.Messages)
 
-	messages := make(chan *imap.Message, 10)
-	done = make(chan error, 1)
+	var section imap.BodySectionName
+	items := []imap.FetchItem{section.FetchItem()}
+
+	messages := make(chan *imap.Message, 1)
 	go func() {
-		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
+		if err := newClient.Fetch(seqSet, items, messages); err != nil {
+			log.Fatal(err)
+		}
 	}()
 
-	log.Println("Last 4 messages:")
-	for msg := range messages {
-		log.Println("Email Subject: " + msg.Envelope.Subject)
+	msg := <-messages
+	if msg == nil {
+		log.Fatal("Server didn't returned message")
 	}
 
-	if err := <-done; err != nil {
+	r := msg.GetBody(&section)
+	if r == nil {
+		log.Fatal("Server didn't returned message body")
+	}
+
+	mr, err := mail.CreateReader(r)
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("Done!")
-}
+	header := mr.Header
+	if date, err := header.Date(); err == nil {
+		log.Println("Date:", date)
+	}
+	if from, err := header.AddressList("From"); err == nil {
+		log.Println("From:", from)
+		data.From = from
+	}
+	if to, err := header.AddressList("To"); err == nil {
+		log.Println("To:", to)
+	}
+	if subject, err := header.Subject(); err == nil {
+		log.Println("Subject:", subject)
+		data.Subject = string(subject)
+	}
 
-func getEmailUpdates() {
+	for {
+		p, err := mr.NextPart()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			log.Fatal(err)
+		}
 
+		switch h := p.Header.(type) {
+		case mail.TextHeader:
+			b, _ := ioutil.ReadAll(p.Body)
+			data.Message = string(b)
+		case mail.AttachmentHeader:
+			filename, _ := h.Filename()
+			fmt.Println("Got attachment:", filename)
+		}
+	}
+
+	datajson, datajsonerr := json.Marshal(data)
+	if datajsonerr != nil {
+		log.Fatal(err)
+	}
+	match, matcherr := regexp.MatchString(sub.Data.Pattern, string(datajson))
+
+	if matcherr != nil {
+		log.Fatal(err)
+	}
+	if (sub.Data.Pattern == "" || match == true) && sub.LastMessageId != msg.SeqNum {
+		sub.LastMessageId = msg.SeqNum
+
+		Listener[userid] = sub
+		var payload Payload
+		payload.ContentType = "application" + "/" + "json"
+		payload.EventType = "hears"
+		payload.EventId = sub.Id
+		payload.Data = data
+
+		requestBody := new(b.Buffer)
+		encodeError := json.NewEncoder(requestBody).Encode(payload)
+		if encodeError != nil {
+			log.Fatalln(encodeError)
+			fmt.Println("err :", encodeError)
+		}
+
+		res, reserror := http.Post(sub.Endpoint, "application/json", requestBody)
+		if reserror != nil {
+			fmt.Println("err :", reserror)
+		}
+		fmt.Println("res :", res)
+	}
 }

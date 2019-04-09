@@ -74,18 +74,30 @@ actions:
     help: Start receiving  emails
     events:
       hears:
-        help: Triggered anytime when any new email is occurred in mail inbox
+        help: Triggered anytime when any new email is occurred in mail inbox.
         arguments: 
           username:
             type: string
             in: requestBody
             required: true
-            help: The email of mail account
+            help: The email of mail account.
           password:
             type: string
             in: requestBody
             required: true
-            help: The password of mail account
+            help: The password of mail account.
+          pattern:
+            type: string
+            in: requestBody
+            help: The regexp pattern to filter sender, subject and message body.
+          imap_host:
+            type: string
+            in: requestBody
+            help: The IMAP host
+          imap_port:
+            type: string
+            in: requestBody
+            help: The IMAP port
         http: 
           port: 3000
           subscribe:

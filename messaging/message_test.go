@@ -24,7 +24,7 @@ var _ = Describe("Send email", func() {
 		log.Fatal(err)
 	}
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(SendEmail)
+	handler := http.HandlerFunc(Send)
 	handler.ServeHTTP(recorder, request)
 
 	Describe("Send email message", func() {
@@ -36,11 +36,16 @@ var _ = Describe("Send email", func() {
 	})
 })
 
-var _ = Describe("Receive email", func() {
+var _ = Describe("Received email", func() {
 
-	receive := Received{Username: "demot636@gmail.com", Password: "Test@123"}
+	var received Subscribe
+	var data Data
+	data.Username = "demot636@gmail.com"
+	data.Password = "Test@123"
+	received.Data = data
+
 	requestBody := new(bytes.Buffer)
-	errr := json.NewEncoder(requestBody).Encode(receive)
+	errr := json.NewEncoder(requestBody).Encode(received)
 	if errr != nil {
 		log.Fatal(errr)
 	}
@@ -50,11 +55,11 @@ var _ = Describe("Receive email", func() {
 		log.Fatal(err)
 	}
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(ReceiveEmail)
+	handler := http.HandlerFunc(Receive1)
 	handler.ServeHTTP(recorder, request)
 
-	Describe("receive email message", func() {
-		Context("receive", func() {
+	Describe("received email message", func() {
+		Context("received", func() {
 			It("Should result http.StatusOK", func() {
 				Expect(recorder.Code).To(Equal(http.StatusOK))
 			})
