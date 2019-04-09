@@ -36,12 +36,12 @@ actions:
         type: string
         in: requestBody
         required: true
-        help: The receiver end
+        help: The receiver email address
       subject: 
         type: string
         in: requestBody
         required: true
-        help: The subject of email message
+        help: The subject of email
       message:
         type: string
         in: requestBody
