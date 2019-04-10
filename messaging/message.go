@@ -70,6 +70,7 @@ var newClient *client.Client
 //Send Email
 func Send(responseWriter http.ResponseWriter, request *http.Request) {
 
+	responseWriter.Header().Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(request.Body)
 	var param Email
 	decodeErr := decoder.Decode(&param)
@@ -101,6 +102,7 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 //Receiver Email
 func Receiver(responseWriter http.ResponseWriter, request *http.Request) {
 
+	responseWriter.Header().Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(request.Body)
 
 	var sub Subscribe
