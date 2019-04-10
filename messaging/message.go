@@ -98,8 +98,8 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 
 }
 
-//Receive Email
-func Receive1(responseWriter http.ResponseWriter, request *http.Request) {
+//Receiver Email
+func Receiver(responseWriter http.ResponseWriter, request *http.Request) {
 
 	decoder := json.NewDecoder(request.Body)
 
@@ -251,6 +251,7 @@ func getMessageUpdates(userid string, sub Subscribe) {
 	if matcherr != nil {
 		log.Fatal(err)
 	}
+
 	if (sub.Data.Pattern == "" || match == true) && sub.LastMessageId != msg.SeqNum {
 		sub.LastMessageId = msg.SeqNum
 

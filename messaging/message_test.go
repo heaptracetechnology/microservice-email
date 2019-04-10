@@ -39,9 +39,12 @@ var _ = Describe("Send email", func() {
 var _ = Describe("Received email", func() {
 
 	var received Subscribe
-	var data Data
+	var data RequestParam
 	data.Username = "demot636@gmail.com"
 	data.Password = "Test@123"
+	data.Pattern = "dddd"
+	data.ImapHost = "imap.gmail.com"
+	data.ImapPort = "993"
 	received.Data = data
 
 	requestBody := new(bytes.Buffer)
@@ -55,7 +58,7 @@ var _ = Describe("Received email", func() {
 		log.Fatal(err)
 	}
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(Receive1)
+	handler := http.HandlerFunc(Receiver)
 	handler.ServeHTTP(recorder, request)
 
 	Describe("received email message", func() {

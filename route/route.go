@@ -27,7 +27,7 @@ var routes = Routes{
         "ReceiveEmail",
         "POST",
         "/receive",
-        messaging.Receive1,
+        messaging.Receiver,
     },
 }
 
