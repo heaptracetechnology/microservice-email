@@ -4,10 +4,6 @@ import (
 	b "bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/emersion/go-imap"
-	"github.com/emersion/go-imap/client"
-	"github.com/emersion/go-message/mail"
-	result "github.com/heaptracetechnology/microservice-mail/result"
 	"io"
 	"io/ioutil"
 	"log"
@@ -16,6 +12,11 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/emersion/go-imap"
+	"github.com/emersion/go-imap/client"
+	"github.com/emersion/go-message/mail"
+	result "github.com/heaptracetechnology/microservice-mail/result"
 )
 
 type Email struct {
@@ -66,7 +67,6 @@ type Message struct {
 
 var Listener = make(map[string]Subscribe)
 var rtmStarted bool
-var newMail *imap.Message
 var newClient *client.Client
 
 //Send Email
@@ -151,7 +151,7 @@ func MailRTM() {
 			break
 		}
 		time.Sleep(5 * time.Second)
-		if isTest == true {
+		if isTest {
 			break
 		}
 	}
@@ -275,7 +275,7 @@ func getMessageUpdates(userid string, sub Subscribe) {
 		log.Fatal(err)
 	}
 
-	if (sub.Data.Pattern == "" || match == true) && sub.LastMessageId != msg.SeqNum {
+	if (sub.Data.Pattern == "" || match) && sub.LastMessageId != msg.SeqNum {
 		sub.LastMessageId = msg.SeqNum
 
 		Listener[userid] = sub
