@@ -73,7 +73,7 @@ actions:
   receive:
     help: Start receiving  emails
     events:
-      hears:
+      mail:
         help: Triggered anytime when any new email is occurred in mail inbox.
         arguments: 
           username:
@@ -89,7 +89,11 @@ actions:
           pattern:
             type: string
             in: requestBody
-            help: The regexp pattern to filter sender, subject and message body.
+            help: The text pattern to filter sender, subject and message body.
+          label:
+            type: string
+            in: requestBody
+            help: The label to retrieve specific email from mailbox, and if label is invalid then INBOX is selected by default.
           imap_host:
             type: string
             in: requestBody
@@ -112,15 +116,12 @@ actions:
           contentType: application/json
           type: object
           properties:
-            event_type:
-              help: The type of event called
+            subject:
+              help: The subject of received mail
               type: string
-            content_type:
-              help: The content type of method
+            from:
+              help: The object of sender details with name and email address
               type: string
-            event_id:
-              help: The event ID
+            message:
+              help: The message body of mail
               type: string
-            data:
-              help: The message payload returned by telegram
-              type: object    

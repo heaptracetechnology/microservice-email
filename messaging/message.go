@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/smtp"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -52,6 +53,7 @@ type RequestParam struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Pattern  string `json:"pattern"`
+	Label    string `json:"label"`
 	ImapHost string `json:"imap_host"`
 	ImapPort string `json:"imap_port"`
 }
@@ -155,24 +157,43 @@ func MailRTM() {
 	}
 }
 
+func labelInMailbox(currentLabel string, mailboxList []string) bool {
+	for _, b := range mailboxList {
+		if b == currentLabel {
+			return true
+		}
+	}
+	return false
+}
+
 func getMessageUpdates(userid string, sub Subscribe) {
 
+	selectedLabel := "INBOX"
 	mailboxes := make(chan *imap.MailboxInfo, 10)
 	done := make(chan error, 1)
 	go func() {
 		done <- newClient.List("", "*", mailboxes)
 	}()
 
+	var labelList []string
 	log.Println("Mailboxes:")
 	for m := range mailboxes {
 		log.Println("* " + m.Name)
+		labelList = append(labelList, m.Name)
+	}
+
+	if sub.Data.Label != "" {
+		check := labelInMailbox(sub.Data.Label, labelList)
+		if check {
+			selectedLabel = sub.Data.Label
+		}
 	}
 
 	if err := <-done; err != nil {
 		log.Fatal(err)
 	}
 
-	mBox, err := newClient.Select("INBOX", false)
+	mBox, err := newClient.Select(selectedLabel, false)
 	var data EmailMessage
 
 	if err != nil {
@@ -260,7 +281,7 @@ func getMessageUpdates(userid string, sub Subscribe) {
 		Listener[userid] = sub
 		var payload Payload
 		payload.ContentType = "application" + "/" + "json"
-		payload.EventType = "hears"
+		payload.EventType = "mail"
 		payload.EventId = sub.Id
 		payload.Data = data
 
@@ -270,7 +291,11 @@ func getMessageUpdates(userid string, sub Subscribe) {
 			log.Fatalln(encodeError)
 			fmt.Println("err :", encodeError)
 		}
-
+		s1 := strings.Split(sub.Endpoint, "//")
+		_, ip := s1[0], s1[1]
+		s := strings.Split(ip, ":")
+		_, port := s[0], s[1]
+		sub.Endpoint = "http://192.168.1.61:" + string(port)
 		res, reserror := http.Post(sub.Endpoint, "application/json", requestBody)
 		if reserror != nil {
 			fmt.Println("err :", reserror)
