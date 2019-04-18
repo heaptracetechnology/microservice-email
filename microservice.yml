@@ -32,7 +32,7 @@ actions:
         in: requestBody
         required: true
         help: The password of sender mail account.
-      to: 
+      to:
         type: string
         in: requestBody
         required: true
@@ -112,7 +112,7 @@ actions:
             path: /unsubscribe
             method: post
             contentType: application/json
-        output: 
+        output:
           contentType: application/json
           type: object
           properties:

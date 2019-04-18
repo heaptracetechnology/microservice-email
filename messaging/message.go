@@ -1,22 +1,24 @@
 package messaging
 
 import (
-	b "bytes"
+	//b "bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cloudevents/sdk-go"
+	"github.com/emersion/go-imap"
+	"github.com/emersion/go-imap/client"
+	"github.com/emersion/go-message/mail"
+	result "github.com/heaptracetechnology/microservice-mail/result"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/smtp"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/emersion/go-imap"
-	"github.com/emersion/go-imap/client"
-	"github.com/emersion/go-message/mail"
-	result "github.com/heaptracetechnology/microservice-mail/result"
 )
 
 type Email struct {
@@ -104,7 +106,6 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 //Receiver Email
 func Receiver(responseWriter http.ResponseWriter, request *http.Request) {
 
-	responseWriter.Header().Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(request.Body)
 
 	var sub Subscribe
@@ -194,7 +195,7 @@ func getMessageUpdates(userid string, sub Subscribe) {
 	}
 
 	mBox, err := newClient.Select(selectedLabel, false)
-	var data EmailMessage
+	var receivedMessage EmailMessage
 
 	if err != nil {
 		log.Fatal(err)
@@ -237,14 +238,14 @@ func getMessageUpdates(userid string, sub Subscribe) {
 	}
 	if from, err := header.AddressList("From"); err == nil {
 		log.Println("From:", from)
-		data.From = from
+		receivedMessage.From = from
 	}
 	if to, err := header.AddressList("To"); err == nil {
 		log.Println("To:", to)
 	}
 	if subject, err := header.Subject(); err == nil {
 		log.Println("Subject:", subject)
-		data.Subject = string(subject)
+		receivedMessage.Subject = string(subject)
 	}
 
 	for {
@@ -258,14 +259,14 @@ func getMessageUpdates(userid string, sub Subscribe) {
 		switch h := p.Header.(type) {
 		case mail.TextHeader:
 			b, _ := ioutil.ReadAll(p.Body)
-			data.Message = string(b)
+			receivedMessage.Message = string(b)
 		case mail.AttachmentHeader:
 			filename, _ := h.Filename()
 			fmt.Println("Got attachment:", filename)
 		}
 	}
 
-	datajson, datajsonerr := json.Marshal(data)
+	datajson, datajsonerr := json.Marshal(receivedMessage)
 	if datajsonerr != nil {
 		log.Fatal(err)
 	}
@@ -275,31 +276,59 @@ func getMessageUpdates(userid string, sub Subscribe) {
 		log.Fatal(err)
 	}
 
+	contentType := "application/json"
+	s1 := strings.Split(sub.Endpoint, "//")
+	_, ip := s1[0], s1[1]
+	s := strings.Split(ip, ":")
+	_, port := s[0], s[1]
+	sub.Endpoint = "http://192.168.0.61:" + string(port)
+
+	t, err := cloudevents.NewHTTPTransport(
+		cloudevents.WithTarget(sub.Endpoint),
+		cloudevents.WithStructuredEncoding(),
+	)
+	if err != nil {
+		log.Printf("failed to create transport, %v", err)
+		return
+	}
+
+	c, err := cloudevents.NewClient(t,
+		cloudevents.WithTimeNow(),
+	)
+	if err != nil {
+		log.Printf("failed to create client, %v", err)
+		return
+	}
+
+	source, err := url.Parse(sub.Endpoint)
+	event := cloudevents.Event{
+		Context: cloudevents.EventContextV01{
+			EventID:     sub.Id,
+			EventType:   "hears",
+			Source:      cloudevents.URLRef{URL: *source},
+			ContentType: &contentType,
+		}.AsV01(),
+		Data: receivedMessage,
+	}
+
 	if (sub.Data.Pattern == "" || match) && sub.LastMessageId != msg.SeqNum {
+
 		sub.LastMessageId = msg.SeqNum
-
 		Listener[userid] = sub
-		var payload Payload
-		payload.ContentType = "application" + "/" + "json"
-		payload.EventType = "mail"
-		payload.EventId = sub.Id
-		payload.Data = data
-
-		requestBody := new(b.Buffer)
-		encodeError := json.NewEncoder(requestBody).Encode(payload)
-		if encodeError != nil {
-			log.Fatalln(encodeError)
-			fmt.Println("err :", encodeError)
+		resp, err := c.Send(context.Background(), event)
+		if err != nil {
+			log.Printf("failed to send: %v", err)
 		}
-		s1 := strings.Split(sub.Endpoint, "//")
-		_, ip := s1[0], s1[1]
-		s := strings.Split(ip, ":")
-		_, port := s[0], s[1]
-		sub.Endpoint = "http://192.168.1.61:" + string(port)
-		res, reserror := http.Post(sub.Endpoint, "application/json", requestBody)
-		if reserror != nil {
-			fmt.Println("err :", reserror)
+		if resp != nil {
+			fmt.Printf("Response:\n%s\n", resp)
+			fmt.Printf("Got Event Response Context: %+v\n", resp.Context)
+			data := event
+			if err := resp.DataAs(event); err != nil {
+				fmt.Printf("Got Data Error: %s\n", err.Error())
+			}
+			fmt.Printf("Got Response Data: %+v\n", data)
+		} else {
+			log.Printf("event sent at %s", time.Now())
 		}
-		fmt.Println("res :", res)
 	}
 }

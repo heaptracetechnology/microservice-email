@@ -8,6 +8,8 @@ RUN go get github.com/emersion/go-message/mail
 
 RUN go get github.com/emersion/go-imap/client
 
+RUN go get github.com/cloudevents/sdk-go
+
 WORKDIR /go/src/github.com/heaptracetechnology/microservice-mail
 
 ADD . /go/src/github.com/heaptracetechnology/microservice-mail
