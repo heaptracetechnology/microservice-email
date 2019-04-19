@@ -1,7 +1,6 @@
 package messaging
 
 import (
-	//b "bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -304,7 +303,7 @@ func getMessageUpdates(userid string, sub Subscribe) {
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV01{
 			EventID:     sub.Id,
-			EventType:   "hears",
+			EventType:   "mail",
 			Source:      cloudevents.URLRef{URL: *source},
 			ContentType: &contentType,
 		}.AsV01(),
