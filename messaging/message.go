@@ -16,7 +16,6 @@ import (
 	"net/smtp"
 	"net/url"
 	"regexp"
-	"strings"
 	"time"
 )
 
