@@ -51,11 +51,8 @@ type Subscribe struct {
 
 type RequestParam struct {
 	Username string `json:"username"`
-	Password string `json:"password"`
 	Pattern  string `json:"pattern"`
 	Label    string `json:"label"`
-	ImapHost string `json:"imap_host"`
-	ImapPort string `json:"imap_port"`
 }
 
 type Message struct {
@@ -112,6 +109,17 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 //Receiver Email
 func Receiver(responseWriter http.ResponseWriter, request *http.Request) {
 
+	var password = os.Getenv("PASSWORD")
+	var imapHost = os.Getenv("IMAP_HOST")
+	var imapPort = os.Getenv("IMAP_PORT")
+
+	if password == "" || imapHost == "" || imapPort == "" {
+		message := Message{"false", "Please provide environment variables", http.StatusBadRequest}
+		bytes, _ := json.Marshal(message)
+		result.WriteJsonResponse(responseWriter, bytes, http.StatusBadRequest)
+		return
+	}
+
 	decoder := json.NewDecoder(request.Body)
 
 	var sub Subscribe
@@ -123,11 +131,11 @@ func Receiver(responseWriter http.ResponseWriter, request *http.Request) {
 
 	log.Println("Connecting to server...")
 
-	newClient, _ = client.DialTLS(sub.Data.ImapHost+":"+sub.Data.ImapPort, nil)
+	newClient, _ = client.DialTLS(imapHost+":"+imapPort, nil)
 
 	log.Println("Connected")
 
-	if err := newClient.Login(sub.Data.Username, sub.Data.Password); err != nil {
+	if err := newClient.Login(sub.Data.Username, password); err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Logged in")

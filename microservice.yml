@@ -66,11 +66,6 @@ actions:
             in: requestBody
             required: true
             help: The email of mail account.
-          password:
-            type: string
-            in: requestBody
-            required: true
-            help: The password of mail account.
           pattern:
             type: string
             in: requestBody
