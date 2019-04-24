@@ -10,12 +10,12 @@ RUN go get github.com/emersion/go-imap/client
 
 RUN go get github.com/cloudevents/sdk-go
 
-WORKDIR /go/src/github.com/heaptracetechnology/microservice-mail
+WORKDIR /go/src/github.com/heaptracetechnology/microservice-email
 
-ADD . /go/src/github.com/heaptracetechnology/microservice-mail
+ADD . /go/src/github.com/heaptracetechnology/microservice-email
 
-RUN go install github.com/heaptracetechnology/microservice-mail
+RUN go install github.com/heaptracetechnology/microservice-email
 
-ENTRYPOINT microservice-mail
+ENTRYPOINT microservice-email
 
 EXPOSE 3000

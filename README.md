@@ -1,5 +1,5 @@
-# Mail as a microservice
-An OMG service for Mail, it allows to send and receive emails.
+# Email as a microservice
+An OMG service for Email, it allows to send and receive emails.
 
 [![Open Microservice Guide](https://img.shields.io/badge/OMG-enabled-brightgreen.svg?style=for-the-badge)](https://microservice.guide)
 [![Build Status](https://travis-ci.com/heaptracetechnology/microservice-mail.svg?branch=master)](https://travis-ci.com/heaptracetechnology/microservice-mail)

@@ -8,25 +8,24 @@ import (
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
-	result "github.com/heaptracetechnology/microservice-mail/result"
+	result "github.com/heaptracetechnology/microservice-email/result"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/smtp"
 	"net/url"
+	"os"
 	"regexp"
+	"strings"
 	"time"
 )
 
 type Email struct {
-	Subject  string `json:"subject,omitempty"`
-	Body     string `json:"message,omitempty"`
-	From     string `json:"from,omitempty"`
-	To       string `json:"to,omitempty"`
-	Password string `json:"password,omitempty"`
-	SMTPHost string `json:"smtp_host,omitempty"`
-	SMTPPort string `json:"smtp_port,omitempty"`
+	Subject string `json:"subject,omitempty"`
+	Body    string `json:"message,omitempty"`
+	From    string `json:"from,omitempty"`
+	To      string `json:"to,omitempty"`
 }
 
 type Payload struct {
@@ -72,7 +71,17 @@ var newClient *client.Client
 //Send Email
 func Send(responseWriter http.ResponseWriter, request *http.Request) {
 
-	responseWriter.Header().Set("Content-Type", "application/json")
+	var password = os.Getenv("PASSWORD")
+	var smtpHost = os.Getenv("SMTP_HOST")
+	var smtpPort = os.Getenv("SMTP_PORT")
+
+	if password == "" || smtpHost == "" || smtpPort == "" {
+		message := Message{"false", "Please provide environment variables", http.StatusBadRequest}
+		bytes, _ := json.Marshal(message)
+		result.WriteJsonResponse(responseWriter, bytes, http.StatusBadRequest)
+		return
+	}
+
 	decoder := json.NewDecoder(request.Body)
 	var param Email
 	decodeErr := decoder.Decode(&param)
@@ -85,11 +94,11 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 	to := param.To
 	sub := param.Subject
 	body := param.Body
-	smtpAddress := param.SMTPHost + ":" + param.SMTPPort
+	smtpAddress := smtpHost + ":" + smtpPort
 
 	msg := "From: " + from + "\n" + "To: " + to + "\n" + "Subject: " + sub + "\n" + body
 
-	err := smtp.SendMail(smtpAddress, smtp.PlainAuth("", from, param.Password, param.SMTPHost), from, []string{to}, []byte(msg))
+	err := smtp.SendMail(smtpAddress, smtp.PlainAuth("", from, password, smtpHost), from, []string{to}, []byte(msg))
 	if err != nil {
 		fmt.Println("err ::", err)
 		return
@@ -98,7 +107,6 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 		bytes, _ := json.Marshal(message)
 		result.WriteJsonResponse(responseWriter, bytes, http.StatusOK)
 	}
-
 }
 
 //Receiver Email
@@ -275,6 +283,11 @@ func getMessageUpdates(userid string, sub Subscribe) {
 	}
 
 	contentType := "application/json"
+	s1 := strings.Split(sub.Endpoint, "//")
+	_, ip := s1[0], s1[1]
+	s := strings.Split(ip, ":")
+	_, port := s[0], s[1]
+	sub.Endpoint = "http://192.168.0.61:" + string(port)
 
 	t, err := cloudevents.NewHTTPTransport(
 		cloudevents.WithTarget(sub.Endpoint),
