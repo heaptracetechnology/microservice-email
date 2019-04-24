@@ -65,7 +65,7 @@ actions:
             type: string
             in: requestBody
             required: true
-            help: The email of mail account.
+            help: The receiver account email address.
           pattern:
             type: string
             in: requestBody
@@ -93,7 +93,7 @@ actions:
               type: string
             from:
               help: The object of sender details with name and email address
-              type: string
+              type: map
             message:
               help: The message body of mail
               type: string
