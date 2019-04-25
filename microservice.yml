@@ -28,7 +28,7 @@ actions:
         required: true
         help: The sender email address.
       to:
-        type: string
+        type: list
         in: requestBody
         required: true
         help: The receiver email address
@@ -43,7 +43,7 @@ actions:
         required: true
         help: The message body of email
     output:
-      type: string
+      type: object
       contentType: application/json
       properties:
         success:

@@ -8,11 +8,17 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 )
 
 var _ = Describe("Send email", func() {
 
-	email := Email{From: "demot636@gmail.com", Password: "Test@123", To: "rohits@heaptrace.com", Subject: "Testing microservice", Body: "Any body message to test", SMTPHost: "smtp.gmail.com", SMTPPort: "587"}
+	os.Setenv("PASSWORD", "ltihivyeggcimelm")
+	os.Setenv("SMTP_HOST", "smtp.gmail.com")
+	os.Setenv("SMTP_PORT", "465")
+
+	to := []string{"rohits@heaptrace.com"}
+	email := Email{From: "demot636@gmail.com", To: to, Subject: "Testing microservice", Body: "Any body message to test"}
 	requestBody := new(bytes.Buffer)
 	errr := json.NewEncoder(requestBody).Encode(email)
 	if errr != nil {
@@ -38,13 +44,14 @@ var _ = Describe("Send email", func() {
 
 var _ = Describe("Received email", func() {
 
+	os.Setenv("PASSWORD", "ltihivyeggcimelm")
+	os.Setenv("IMAP_HOST", "imap.gmail.com")
+	os.Setenv("IMAP_PORT", "993")
+
 	var received Subscribe
 	var data RequestParam
 	data.Username = "demot636@gmail.com"
-	data.Password = "Test@123"
 	data.Pattern = "dddd"
-	data.ImapHost = "imap.gmail.com"
-	data.ImapPort = "993"
 	received.Data = data
 
 	requestBody := new(bytes.Buffer)

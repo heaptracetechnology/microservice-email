@@ -2,6 +2,7 @@ package messaging
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go"
@@ -22,10 +23,10 @@ import (
 )
 
 type Email struct {
-	Subject string `json:"subject,omitempty"`
-	Body    string `json:"message,omitempty"`
-	From    string `json:"from,omitempty"`
-	To      string `json:"to,omitempty"`
+	Subject string   `json:"subject,omitempty"`
+	Body    string   `json:"message,omitempty"`
+	From    string   `json:"from,omitempty"`
+	To      []string `json:"to,omitempty"`
 }
 
 type Payload struct {
@@ -61,9 +62,140 @@ type Message struct {
 	StatusCode int    `json:"statuscode"`
 }
 
+type ErrorMessage struct {
+	Success    string `json:"success"`
+	Message    error  `json:"message"`
+	StatusCode int    `json:"statuscode"`
+}
+
 var Listener = make(map[string]Subscribe)
 var rtmStarted bool
 var newClient *client.Client
+
+// //Send Email
+// func Send(responseWriter http.ResponseWriter, request *http.Request) {
+
+// 	var password = os.Getenv("PASSWORD")
+// 	var smtpHost = os.Getenv("SMTP_HOST")
+// 	var smtpPort = os.Getenv("SMTP_PORT")
+
+// 	if password == "" || smtpHost == "" || smtpPort == "" {
+// 		message := Message{"false", "Please provide environment variables", http.StatusBadRequest}
+// 		bytes, _ := json.Marshal(message)
+// 		result.WriteJsonResponse(responseWriter, bytes, http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	decoder := json.NewDecoder(request.Body)
+// 	var param Email
+// 	decodeErr := decoder.Decode(&param)
+// 	if decodeErr != nil {
+// 		result.WriteErrorResponse(responseWriter, decodeErr)
+// 		return
+// 	}
+
+// 	from := param.From
+// 	to := param.To
+// 	sub := param.Subject
+// 	body := param.Body
+// 	//smtpAddress := smtpHost + ":" + smtpPort
+
+// 	tlsconfig := &tls.Config{
+// 		InsecureSkipVerify: true,
+// 		ServerName:         smtpHost,
+// 	}
+
+// 	serverName := smtpHost + ":" + smtpPort
+// 	conn, err := tls.Dial("tcp", serverName, tlsconfig)
+// 	if err != nil {
+// 		log.Panic(err)
+// 	}
+
+// 	client, err := smtp.NewClient(conn, smtpHost)
+// 	if err != nil {
+// 		log.Panic(err)
+// 	}
+
+// 	fmt.Println("client :: ", client)
+
+// 	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+// 	// step 1: Use Auth
+// 	if err = client.Auth(auth); err != nil {
+// 		fmt.Println("=======2=========", err)
+// 		log.Panic(err)
+// 	}
+
+// 	// step 2: add all from and to
+// 	if err = client.Mail(from); err != nil {
+// 		fmt.Println("=======3=========", err)
+// 		log.Panic(err)
+// 	}
+
+// 	var toIds []string
+// 	toIds = []string{"rohit68.ht@gmail.com", "rohits@heaptrace.com"}
+// 	for _, k := range toIds {
+// 		if err = client.Rcpt(k); err != nil {
+// 			log.Panic(err)
+// 		}
+// 	}
+
+// 	// Data
+// 	w, err := client.Data()
+// 	if err != nil {
+// 		log.Panic(err)
+// 	}
+
+// 	messageBody := "From: " + from + "\n" + "To: " + to + "\n" + "Subject: " + sub + "\n" + body
+// 	_, err = w.Write([]byte(messageBody))
+// 	if err != nil {
+// 		log.Panic(err)
+// 	}
+
+// 	err = w.Close()
+// 	if err != nil {
+// 		log.Panic(err)
+// 	}
+
+// 	client.Quit()
+
+// 	log.Println("Mail sent successfully")
+
+// 	// msg := "From: " + from + "\n" + "To: " + to + "\n" + "Subject: " + sub + "\n" + body
+
+// 	// sendErr := smtp.SendMail(smtpAddress, smtp.PlainAuth("", from, password, smtpHost), from, []string{to}, []byte(msg))
+// 	// if sendErr != nil {
+// 	// 	fmt.Println("sendErr ::", sendErr)
+// 	// 	return
+// 	// } else {
+// 	// 	message := Message{"true", "Email sent", http.StatusOK}
+// 	// 	bytes, _ := json.Marshal(message)
+// 	// 	result.WriteJsonResponse(responseWriter, bytes, http.StatusOK)
+// 	// }
+
+// }
+func (mail *Email) BuildMessage() string {
+	message := ""
+	message += fmt.Sprintf("From: %s\r\n", mail.From)
+	if len(mail.To) > 0 {
+		message += fmt.Sprintf("To: %s\r\n", strings.Join(mail.To, ";"))
+	}
+
+	//message += fmt.Sprintf("To: %s\r\n", mail.To)
+
+	message += fmt.Sprintf("Subject: %s\r\n", mail.Subject)
+	message += "\r\n" + mail.Body
+
+	return message
+}
+
+func ReturnError(responseErr error) {
+	var responseWriter http.ResponseWriter
+	message := ErrorMessage{"false", responseErr, http.StatusBadRequest}
+	bytes, _ := json.Marshal(message)
+	result.WriteJsonResponse(responseWriter, bytes, http.StatusBadRequest)
+	return
+}
 
 //Send Email
 func Send(responseWriter http.ResponseWriter, request *http.Request) {
@@ -87,23 +219,80 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	from := param.From
-	to := param.To
-	sub := param.Subject
-	body := param.Body
+	if param.From == "" || param.To == nil || param.Subject == "" || param.Body == "" {
+		message := Message{"false", "Please provide required details", http.StatusBadRequest}
+		bytes, _ := json.Marshal(message)
+		result.WriteJsonResponse(responseWriter, bytes, http.StatusBadRequest)
+		return
+	}
+
+	messageBody := param.BuildMessage()
+
+	auth := smtp.PlainAuth("", param.From, password, smtpHost)
+
+	// TLS config
+	tlsconfig := &tls.Config{
+		InsecureSkipVerify: true,
+		ServerName:         smtpHost,
+	}
+
 	smtpAddress := smtpHost + ":" + smtpPort
 
-	msg := "From: " + from + "\n" + "To: " + to + "\n" + "Subject: " + sub + "\n" + body
-
-	err := smtp.SendMail(smtpAddress, smtp.PlainAuth("", from, password, smtpHost), from, []string{to}, []byte(msg))
+	conn, err := tls.Dial("tcp", smtpAddress, tlsconfig)
 	if err != nil {
-		fmt.Println("err ::", err)
+		ReturnError(err)
 		return
-	} else {
-		message := Message{"true", "Email sent", http.StatusOK}
-		bytes, _ := json.Marshal(message)
-		result.WriteJsonResponse(responseWriter, bytes, http.StatusOK)
 	}
+
+	client, err := smtp.NewClient(conn, smtpHost)
+	if err != nil {
+		ReturnError(err)
+		return
+	}
+
+	// step 1: Use Auth
+	if err = client.Auth(auth); err != nil {
+		ReturnError(err)
+		return
+	}
+
+	// step 2: add all from and to
+	if err = client.Mail(param.From); err != nil {
+		ReturnError(err)
+		return
+	}
+
+	for _, k := range param.To {
+		if err = client.Rcpt(k); err != nil {
+			ReturnError(err)
+			return
+		}
+	}
+
+	// Data
+	w, err := client.Data()
+	if err != nil {
+		ReturnError(err)
+		return
+	}
+
+	_, err = w.Write([]byte(messageBody))
+	if err != nil {
+		ReturnError(err)
+		return
+	}
+
+	err = w.Close()
+	if err != nil {
+		ReturnError(err)
+		return
+	}
+
+	client.Quit()
+
+	message := Message{"true", "Mail sent successfully", http.StatusOK}
+	bytes, _ := json.Marshal(message)
+	result.WriteJsonResponse(responseWriter, bytes, http.StatusOK)
 }
 
 //Receiver Email

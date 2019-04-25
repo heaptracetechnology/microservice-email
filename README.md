@@ -26,11 +26,13 @@ omg build
 
 ##### Send Email
 ```sh
-$ omg run send -a from=<SENDER_MAIL_ADDRESS> -a to=<RECEIVER_EMAIL_ADDRESS> -a subject=<EMAIL_SUBJECT> -a message=<EMAIL_MESSAGE_BODY> -e PASSWORD=<SENDER_ACCOUNT_PASSWORD> -e SMTP_HOST="smtp.gmail.com" -e SMTP_PORT="587" 
+$ omg run send -a from=<SENDER_MAIL_ADDRESS> -a to=<LIST_OF_RECEIVER_EMAIL_ADDRESS> -a subject=<EMAIL_SUBJECT> -a message=<EMAIL_MESSAGE_BODY> -e SMTP_HOST=<smtp.example.com> -e SMTP_PORT="465" -e PASSWORD=<APP_PASSWORD_FROM_SENDER_ACCOUNT>
+
+
 ```
 ##### Receive Email
 ```sh
-$ omg subscribe receive mail -a username=<RECEIVER_MAIL_ADDRESS> -a label=<MAILBOX_LABEL> -e PASSWORD=<RECEIVER_ACCOUNT_PASSWORD> -e IMAP_HOST="imap.gmail.com" -e IMAP_PORT="993"
+$ omg subscribe receive mail -a username=<RECEIVER_MAIL_ADDRESS> -a label=<MAILBOX_LABEL> -e PASSWORD=<RECEIVER_ACCOUNT_PASSWORD> -e IMAP_HOST=<imap.example.com> -e IMAP_PORT="993"
 ```
 ## License
 ### [MIT](https://choosealicense.com/licenses/mit/)
