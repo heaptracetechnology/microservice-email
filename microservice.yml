@@ -53,7 +53,7 @@ actions:
           help: Success message or error message if occurred.
           type: string
         status_code:
-          help: Http status code.
+          help: SMTP status code.
           type: int
   receive:
     help: Start receiving  emails
@@ -95,7 +95,7 @@ actions:
               help: The object of sender details with name and email address
               type: map
             message:
-              help: The message body of mail
+              help: The message body of mail or error message if occurred
               type: string
 environment:
   PASSWORD:
