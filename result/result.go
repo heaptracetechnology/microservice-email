@@ -16,6 +16,6 @@ func WriteJsonResponse(responseWriter http.ResponseWriter, bytes []byte, statusC
 	responseWriter.WriteHeader(statusCode)
 	_, err := responseWriter.Write(bytes)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }

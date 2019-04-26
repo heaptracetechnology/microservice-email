@@ -85,14 +85,6 @@ func (mail *Email) BuildMessage() string {
 	return message
 }
 
-func ReturnError(responseErr error) {
-	var responseWriter http.ResponseWriter
-	message := ErrorMessage{"false", responseErr, http.StatusBadRequest}
-	bytes, _ := json.Marshal(message)
-	result.WriteJsonResponse(responseWriter, bytes, http.StatusBadRequest)
-	return
-}
-
 //Send Email
 func Send(responseWriter http.ResponseWriter, request *http.Request) {
 
@@ -134,51 +126,51 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 
 	smtpAddress := smtpHost + ":" + smtpPort
 
-	conn, err := tls.Dial("tcp", smtpAddress, tlsconfig)
-	if err != nil {
-		ReturnError(err)
+	conn, connErr := tls.Dial("tcp", smtpAddress, tlsconfig)
+	if connErr != nil {
+		result.WriteErrorResponse(responseWriter, connErr)
 		return
 	}
 
-	client, err := smtp.NewClient(conn, smtpHost)
-	if err != nil {
-		ReturnError(err)
+	client, clientErr := smtp.NewClient(conn, smtpHost)
+	if clientErr != nil {
+		result.WriteErrorResponse(responseWriter, clientErr)
 		return
 	}
 
-	if err = client.Auth(auth); err != nil {
-		ReturnError(err)
+	if authErr := client.Auth(auth); authErr != nil {
+		result.WriteErrorResponse(responseWriter, authErr)
 		return
 	}
 
-	if err = client.Mail(param.From); err != nil {
-		ReturnError(err)
+	if fromErr := client.Mail(param.From); fromErr != nil {
+		result.WriteErrorResponse(responseWriter, fromErr)
 		return
 	}
 
 	for _, k := range param.To {
-		if err = client.Rcpt(k); err != nil {
-			ReturnError(err)
+		if rcptErr := client.Rcpt(k); rcptErr != nil {
+			result.WriteErrorResponse(responseWriter, rcptErr)
 			return
 		}
 	}
 
 	// Data
-	w, err := client.Data()
-	if err != nil {
-		ReturnError(err)
+	w, dataErr := client.Data()
+	if dataErr != nil {
+		result.WriteErrorResponse(responseWriter, dataErr)
 		return
 	}
 
-	_, err = w.Write([]byte(messageBody))
-	if err != nil {
-		ReturnError(err)
+	_, writeErr := w.Write([]byte(messageBody))
+	if writeErr != nil {
+		result.WriteErrorResponse(responseWriter, writeErr)
 		return
 	} else {
 
-		err = w.Close()
-		if err != nil {
-			ReturnError(err)
+		closeErr := w.Close()
+		if closeErr != nil {
+			result.WriteErrorResponse(responseWriter, closeErr)
 			return
 		}
 
