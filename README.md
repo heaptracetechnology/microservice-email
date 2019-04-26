@@ -32,7 +32,7 @@ $ omg run send -a from=<SENDER_MAIL_ADDRESS> -a to=<LIST_OF_RECEIVER_EMAIL_ADDRE
 ```
 ##### Receive Email
 ```sh
-$ omg subscribe receive mail -a username=<RECEIVER_MAIL_ADDRESS> -a label=<MAILBOX_LABEL> -e PASSWORD=<RECEIVER_ACCOUNT_PASSWORD> -e IMAP_HOST=<imap.example.com> -e IMAP_PORT="993"
+$ omg subscribe receive mail -a username=<RECEIVER_MAIL_ADDRESS> -a label=<MAILBOX_LABEL> -e PASSWORD=<APP_PASSWORD_FROM_RECEIVER_ACCOUNT> -e IMAP_HOST=<imap.example.com> -e IMAP_PORT="993"
 ```
 ## License
 ### [MIT](https://choosealicense.com/licenses/mit/)

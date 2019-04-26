@@ -174,19 +174,21 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		ReturnError(err)
 		return
+	} else {
+
+		err = w.Close()
+		if err != nil {
+			ReturnError(err)
+			return
+		}
+
+		client.Quit()
+
+		message := Message{"true", "Mail sent successfully", 250}
+		bytes, _ := json.Marshal(message)
+		result.WriteJsonResponse(responseWriter, bytes, 250)
 	}
 
-	err = w.Close()
-	if err != nil {
-		ReturnError(err)
-		return
-	}
-
-	client.Quit()
-
-	message := Message{"true", "Mail sent successfully", http.StatusOK}
-	bytes, _ := json.Marshal(message)
-	result.WriteJsonResponse(responseWriter, bytes, http.StatusOK)
 }
 
 //Receiver Email
@@ -374,11 +376,6 @@ func getMessageUpdates(userid string, sub Subscribe) {
 	}
 
 	contentType := "application/json"
-	s1 := strings.Split(sub.Endpoint, "//")
-	_, ip := s1[0], s1[1]
-	s := strings.Split(ip, ":")
-	_, port := s[0], s[1]
-	sub.Endpoint = "http://192.168.0.61:" + string(port)
 
 	t, err := cloudevents.NewHTTPTransport(
 		cloudevents.WithTarget(sub.Endpoint),
