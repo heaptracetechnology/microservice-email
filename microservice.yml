@@ -48,7 +48,7 @@ actions:
       properties:
         success:
           help: Returns true or false.
-          type: string
+          type: boolean
         message:
           help: Success message or error message if occurred.
           type: string
