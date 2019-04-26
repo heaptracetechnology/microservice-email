@@ -62,12 +62,6 @@ type Message struct {
 	StatusCode int    `json:"statuscode"`
 }
 
-type ErrorMessage struct {
-	Success    string `json:"success"`
-	Message    error  `json:"message"`
-	StatusCode int    `json:"statuscode"`
-}
-
 var Listener = make(map[string]Subscribe)
 var rtmStarted bool
 var newClient *client.Client
