@@ -5,6 +5,8 @@ go:
   - tip
 
 before_install:
+  - sudo apt-get install git
+  - sudo git clone https://github.com/emersion/go-message.git
   - go get -t -v ./...
 
 script:
