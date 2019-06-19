@@ -59,7 +59,7 @@ type RequestParam struct {
 type Message struct {
 	Success    string `json:"success"`
 	Message    string `json:"message"`
-	StatusCode int    `json:"statuscode"`
+	StatusCode int    `json:"statusCode"`
 }
 
 var Listener = make(map[string]Subscribe)
