@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-  <testsuite name="Messaging Suit" tests="2" failures="0" errors="0" time="7.606">
-      <testcase name="Send email Send email message send Should result http.StatusOK" classname="Messaging Suit" time="4.1563e-05"></testcase>
-      <testcase name="Received email received email message received Should result http.StatusOK" classname="Messaging Suit" time="3.384e-06"></testcase>
-  </testsuite>

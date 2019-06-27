@@ -11,11 +11,17 @@ import (
 	"os"
 )
 
+var (
+	password = os.Getenv("EMAIL_PASSWORD")
+	to       = os.Getenv("EMAIL_TO")
+	from     = os.Getenv("EMAIL_FROM")
+)
+
 //Negative test without enviroment variables send mail
 var _ = Describe("Send email", func() {
 
-	to := []string{"rohits@heaptrace.com"}
-	email := Email{From: "demot636@gmail.com", To: to, Subject: "Testing microservice", Body: "Any body message to test"}
+	to := []string{to}
+	email := Email{From: from, To: to, Subject: "Testing microservice", Body: "Any body message to test"}
 	requestBody := new(bytes.Buffer)
 	errr := json.NewEncoder(requestBody).Encode(email)
 	if errr != nil {
@@ -39,16 +45,15 @@ var _ = Describe("Send email", func() {
 	})
 })
 
-
 //Negative test without from variables send mail
 var _ = Describe("Send email", func() {
 
-	os.Setenv("PASSWORD", "ltihivyeggcimelm")
+	os.Setenv("PASSWORD", password)
 	os.Setenv("SMTP_HOST", "smtp.gmail.com")
 	os.Setenv("SMTP_PORT", "465")
 
-	to := []string{"rrrrrrrohits@heaptrace.com"}
-	email := Email{From: "demodfsdft636@gmail.com", To: to, Subject: "Testing microservice", Body: "Any body message to test"}
+	to := []string{to}
+	email := Email{From: from, To: to, Subject: "Testing microservice", Body: "Any body message to test"}
 	requestBody := new(bytes.Buffer)
 	errr := json.NewEncoder(requestBody).Encode(email)
 	if errr != nil {
@@ -75,11 +80,11 @@ var _ = Describe("Send email", func() {
 //Negative test without smtp variables send mail
 var _ = Describe("Send email", func() {
 
-	os.Setenv("PASSWORD", "ltihivyeggcimelm")
+	os.Setenv("PASSWORD", password)
 	os.Setenv("SMTP_PORT", "465")
 
-	to := []string{"rrrrrrrohits@heaptrace.com"}
-	email := Email{From: "demodfsdft636@gmail.com", To: to, Subject: "Testing microservice", Body: "Any body message to test"}
+	to := []string{to}
+	email := Email{From: from, To: to, Subject: "Testing microservice", Body: "Any body message to test"}
 	requestBody := new(bytes.Buffer)
 	errr := json.NewEncoder(requestBody).Encode(email)
 	if errr != nil {
@@ -103,11 +108,10 @@ var _ = Describe("Send email", func() {
 	})
 })
 
-
 //Negative test without args variables send mail
 var _ = Describe("Send email", func() {
 
-	os.Setenv("PASSWORD", "ltihivyeggcimelm")
+	os.Setenv("PASSWORD", password)
 	os.Setenv("SMTP_HOST", "smtp.gmail.com")
 	os.Setenv("SMTP_PORT", "465")
 
@@ -138,12 +142,12 @@ var _ = Describe("Send email", func() {
 //Postive send mail test
 var _ = Describe("Send email", func() {
 
-	os.Setenv("PASSWORD", "ltihivyeggcimelm")
+	os.Setenv("PASSWORD", password)
 	os.Setenv("SMTP_HOST", "smtp.gmail.com")
 	os.Setenv("SMTP_PORT", "465")
 
-	to := []string{"rrrrrrrohits@heaptrace.com"}
-	email := Email{From: "demot636@gmail.com", To: to, Subject: "Testing microservice", Body: "Any body message to test"}
+	to := []string{to}
+	email := Email{From: from, To: to, Subject: "Testing microservice", Body: "Any body message to test"}
 	requestBody := new(bytes.Buffer)
 	errr := json.NewEncoder(requestBody).Encode(email)
 	if errr != nil {
@@ -170,7 +174,7 @@ var _ = Describe("Send email", func() {
 //Decoder test
 var _ = Describe("Send email", func() {
 
-	os.Setenv("PASSWORD", "ltihivyeggcimelm")
+	os.Setenv("PASSWORD", password)
 	os.Setenv("SMTP_HOST", "smtp.gmail.com")
 	os.Setenv("SMTP_PORT", "465")
 
@@ -198,15 +202,14 @@ var _ = Describe("Send email", func() {
 	})
 })
 
-
 //Received email negative
 var _ = Describe("Received email", func() {
 
-	os.Setenv("PASSWORD", "ltihivyeggcimelm")
+	os.Setenv("PASSWORD", password)
 
 	var received Subscribe
 	var data RequestParam
-	data.Username = "demot636@gmail.com"
+	data.Username = from
 	data.Pattern = "dddd"
 	received.Data = data
 	received.IsTesting = true
@@ -234,17 +237,16 @@ var _ = Describe("Received email", func() {
 	})
 })
 
-
 //Received email
 var _ = Describe("Received email", func() {
 
-	os.Setenv("PASSWORD", "ltihivyeggcimelm")
+	os.Setenv("PASSWORD", password)
 	os.Setenv("IMAP_HOST", "imap.gmail.com")
 	os.Setenv("IMAP_PORT", "993")
 
 	var received Subscribe
 	var data RequestParam
-	data.Username = "demot636@gmail.com"
+	data.Username = from
 	data.Pattern = "dddd"
 	received.Data = data
 	received.IsTesting = true
@@ -271,5 +273,3 @@ var _ = Describe("Received email", func() {
 		})
 	})
 })
-
-
