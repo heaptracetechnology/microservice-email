@@ -9,7 +9,7 @@ import (
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
-	result "github.com/heaptracetechnology/microservice-email/result"
+	result "github.com/oms-services/email/result"
 	"io"
 	"io/ioutil"
 	"log"

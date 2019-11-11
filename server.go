@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/heaptracetechnology/microservice-email/route"
+	"github.com/oms-services/email/route"
 	"log"
 	"net/http"
 )

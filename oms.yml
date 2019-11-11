@@ -1,15 +1,11 @@
 omg: 1
 lifecycle:
   startup:
-    command: ["microservice-email"]
+    command: ['email']
 info:
   version: 1.0.0
   title: Email
   description: This is a email service
-  contact:
-    name: Rohit Shetty
-    url: https://github.com/ht68rohit
-    email: rohits@heaptrace.com
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
@@ -22,7 +18,7 @@ actions:
       path: /send
       contentType: application/json
     arguments:
-      from: 
+      from:
         type: string
         in: requestBody
         required: true
@@ -32,7 +28,7 @@ actions:
         in: requestBody
         required: true
         help: The receiver email address
-      subject: 
+      subject:
         type: string
         in: requestBody
         required: true
@@ -60,7 +56,7 @@ actions:
     events:
       mail:
         help: Triggered anytime when any new email is occurred in mail inbox.
-        arguments: 
+        arguments:
           username:
             type: string
             in: requestBody
@@ -73,8 +69,10 @@ actions:
           label:
             type: string
             in: requestBody
-            help: The label to retrieve specific email from mailbox, and if label is invalid then INBOX is selected by default.
-        http: 
+            help:
+              The label to retrieve specific email from mailbox, and if label is
+              invalid then INBOX is selected by default.
+        http:
           port: 3000
           subscribe:
             method: post
