@@ -1,14 +1,19 @@
-omg: 1
-lifecycle:
-  startup:
-    command: ['email']
+oms: 1
 info:
   version: 1.0.0
   title: Email
   description: This is a email service
   license:
     name: MIT
-    url: https://opensource.org/licenses/MIT
+    url: 'https://opensource.org/licenses/MIT'
+  contact:
+    name: Open Microservices
+    url: 'https://openmicroservices.org'
+    email: core@openmicroservices.org
+lifecycle:
+  startup:
+    command:
+      - email
 actions:
   send:
     help: Send email
@@ -65,11 +70,11 @@ actions:
           pattern:
             type: string
             in: requestBody
-            help: The text pattern to filter sender, subject and message body.
+            help: 'The text pattern to filter sender, subject and message body.'
           label:
             type: string
             in: requestBody
-            help:
+            help: >-
               The label to retrieve specific email from mailbox, and if label is
               invalid then INBOX is selected by default.
         http:
