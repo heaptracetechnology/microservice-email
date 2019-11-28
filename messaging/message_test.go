@@ -30,7 +30,7 @@ var _ = Describe("Emails", func() {
 	})
 
 	//Negative test without enviroment variables send mail
-	var _ = Describe("Send email", func() {
+	Describe("Send email", func() {
 
 		BeforeEach(func() {
 			to := []string{to}
@@ -60,7 +60,7 @@ var _ = Describe("Emails", func() {
 	})
 
 	//Negative test without smtp variables send mail
-	var _ = Describe("Send email", func() {
+	Describe("Send email", func() {
 
 		BeforeEach(func() {
 			os.Setenv("PASSWORD", password)
@@ -93,7 +93,7 @@ var _ = Describe("Emails", func() {
 	})
 
 	//Negative test without args variables send mail
-	var _ = Describe("Send email", func() {
+	Describe("Send email", func() {
 
 		BeforeEach(func() {
 			os.Setenv("PASSWORD", password)
@@ -126,7 +126,7 @@ var _ = Describe("Emails", func() {
 	})
 
 	//Postive send mail test
-	var _ = Describe("Send email", func() {
+	Describe("Send email", func() {
 
 		BeforeEach(func() {
 
@@ -161,7 +161,7 @@ var _ = Describe("Emails", func() {
 	})
 
 	//Decoder test
-	var _ = Describe("Send email", func() {
+	Describe("Send email", func() {
 
 		BeforeEach(func() {
 			os.Setenv("PASSWORD", password)
@@ -194,7 +194,7 @@ var _ = Describe("Emails", func() {
 	})
 
 	//Received email negative
-	var _ = Describe("Received email", func() {
+	Describe("Received email", func() {
 
 		BeforeEach(func() {
 			os.Setenv("PASSWORD", password)
@@ -231,7 +231,7 @@ var _ = Describe("Emails", func() {
 	})
 
 	//Received email
-	var _ = Describe("Received email", func() {
+	Describe("Received email", func() {
 
 		BeforeEach(func() {
 			os.Setenv("PASSWORD", password)
