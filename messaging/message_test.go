@@ -40,7 +40,7 @@ var _ = Describe("Send email", func() {
 	Describe("Send email message", func() {
 		Context("send", func() {
 			It("Should result http.StatusOK", func() {
-				Expect(http.StatusBadRequest).To(Equal(http.StatusBadRequest))
+				Expect(recorder.Code).To(Equal(http.StatusBadRequest))
 			})
 		})
 	})
