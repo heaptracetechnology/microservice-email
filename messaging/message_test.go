@@ -12,10 +12,16 @@ import (
 )
 
 var (
-	password = os.Getenv("EMAIL_PASSWORD")
-	to       = os.Getenv("EMAIL_TO")
-	from     = os.Getenv("EMAIL_FROM")
+	password string
+	to       string
+	from     string
 )
+
+var _ = BeforeSuite(func() {
+	password = getEnvOrError("EMAIL_PASSWORD")
+	to = getEnvOrError("EMAIL_TO")
+	from = getEnvOrError("EMAIL_FROM")
+})
 
 var _ = Describe("Emails", func() {
 
