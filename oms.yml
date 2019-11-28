@@ -14,6 +14,10 @@ lifecycle:
   startup:
     command:
       - email
+health:
+  http:
+    path: /healthcheck
+    port: 3000
 actions:
   send:
     help: Send email
