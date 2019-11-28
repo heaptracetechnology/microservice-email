@@ -20,10 +20,15 @@ var (
 
 var _ = Describe("Emails", func() {
 
-	var recorder *httptest.ResponseRecorder
+	var (
+		recorder    *httptest.ResponseRecorder
+		requestBody *bytes.Buffer
+	)
 
 	BeforeEach(func() {
 		recorder = nil
+		requestBody = &bytes.Buffer{}
+
 		os.Unsetenv("PASSWORD")
 		os.Unsetenv("SMTP_HOST")
 		os.Unsetenv("SMTP_PORT")
@@ -32,6 +37,16 @@ var _ = Describe("Emails", func() {
 	})
 
 	Describe("Sending Emails", func() {
+		JustBeforeEach(func() {
+			request, err := http.NewRequest("POST", "/send", requestBody)
+			if err != nil {
+				log.Fatal(err)
+			}
+			recorder = httptest.NewRecorder()
+			handler := http.HandlerFunc(Send)
+			handler.ServeHTTP(recorder, request)
+		})
+
 		When("all env vars are set correctly", func() {
 			BeforeEach(func() {
 				os.Setenv("PASSWORD", password)
@@ -41,21 +56,16 @@ var _ = Describe("Emails", func() {
 
 			When("a valid body is sent in the request", func() {
 				BeforeEach(func() {
-					to := []string{to}
-					email := Email{From: from, To: to, Subject: "Testing microservice", Body: "Any body message to test"}
-					requestBody := new(bytes.Buffer)
+					email := Email{
+						From:    from,
+						To:      []string{to},
+						Subject: "Testing microservice",
+						Body:    "Any body message to test"}
+
 					errr := json.NewEncoder(requestBody).Encode(email)
 					if errr != nil {
 						log.Fatal(errr)
 					}
-
-					request, err := http.NewRequest("POST", "/send", requestBody)
-					if err != nil {
-						log.Fatal(err)
-					}
-					recorder = httptest.NewRecorder()
-					handler := http.HandlerFunc(Send)
-					handler.ServeHTTP(recorder, request)
 				})
 
 				It("should result in a successful SMTP response", func() {
@@ -67,19 +77,10 @@ var _ = Describe("Emails", func() {
 			When("an invalid body is sent in the request", func() {
 				BeforeEach(func() {
 					email := []byte(`{"invalid":body}`)
-					requestBody := new(bytes.Buffer)
 					errr := json.NewEncoder(requestBody).Encode(email)
 					if errr != nil {
 						log.Fatal(errr)
 					}
-
-					request, err := http.NewRequest("POST", "/send", requestBody)
-					if err != nil {
-						log.Fatal(err)
-					}
-					recorder = httptest.NewRecorder()
-					handler := http.HandlerFunc(Send)
-					handler.ServeHTTP(recorder, request)
 				})
 
 				It("should result http.StatusBadRequest", func() {
@@ -95,14 +96,6 @@ var _ = Describe("Emails", func() {
 					if errr != nil {
 						log.Fatal(errr)
 					}
-
-					request, err := http.NewRequest("POST", "/send", requestBody)
-					if err != nil {
-						log.Fatal(err)
-					}
-					recorder = httptest.NewRecorder()
-					handler := http.HandlerFunc(Send)
-					handler.ServeHTTP(recorder, request)
 				})
 
 				It("should result http.StatusBadRequest", func() {
@@ -113,30 +106,8 @@ var _ = Describe("Emails", func() {
 
 		When("not all env vars are set", func() {
 			When("no env vars are set", func() {
-				BeforeEach(func() {
-					to := []string{to}
-					email := Email{From: from, To: to, Subject: "Testing microservice", Body: "Any body message to test"}
-					requestBody := new(bytes.Buffer)
-					errr := json.NewEncoder(requestBody).Encode(email)
-					if errr != nil {
-						log.Fatal(errr)
-					}
-
-					request, err := http.NewRequest("POST", "/send", requestBody)
-					if err != nil {
-						log.Fatal(err)
-					}
-					recorder = httptest.NewRecorder()
-					handler := http.HandlerFunc(Send)
-					handler.ServeHTTP(recorder, request)
-				})
-
-				Describe("Send email message", func() {
-					Context("send", func() {
-						It("Should result http.StatusOK", func() {
-							Expect(recorder.Code).To(Equal(http.StatusBadRequest))
-						})
-					})
+				It("Should result http.StatusOK", func() {
+					Expect(recorder.Code).To(Equal(http.StatusBadRequest))
 				})
 			})
 
@@ -144,33 +115,26 @@ var _ = Describe("Emails", func() {
 				BeforeEach(func() {
 					os.Setenv("PASSWORD", password)
 					os.Setenv("SMTP_PORT", "465")
-
-					to := []string{to}
-					email := Email{From: from, To: to, Subject: "Testing microservice", Body: "Any body message to test"}
-					requestBody := new(bytes.Buffer)
-					errr := json.NewEncoder(requestBody).Encode(email)
-					if errr != nil {
-						log.Fatal(errr)
-					}
-
-					request, err := http.NewRequest("POST", "/send", requestBody)
-					if err != nil {
-						log.Fatal(err)
-					}
-					recorder = httptest.NewRecorder()
-					handler := http.HandlerFunc(Send)
-					handler.ServeHTTP(recorder, request)
 				})
 
 				It("Should result http.StatusBadRequest", func() {
 					Expect(recorder.Code).To(Equal(http.StatusBadRequest))
 				})
 			})
-
 		})
 	})
 
 	Describe("Receiving Emails", func() {
+		JustBeforeEach(func() {
+			request, err := http.NewRequest("POST", "/receive", requestBody)
+			if err != nil {
+				log.Fatal(err)
+			}
+			recorder = httptest.NewRecorder()
+			handler := http.HandlerFunc(Receiver)
+			handler.ServeHTTP(recorder, request)
+		})
+
 		When("all env vars are set", func() {
 			BeforeEach(func() {
 				os.Setenv("PASSWORD", password)
@@ -184,19 +148,10 @@ var _ = Describe("Emails", func() {
 				received.Data = data
 				received.IsTesting = true
 
-				requestBody := new(bytes.Buffer)
 				errr := json.NewEncoder(requestBody).Encode(received)
 				if errr != nil {
 					log.Fatal(errr)
 				}
-
-				request, err := http.NewRequest("POST", "/receive", requestBody)
-				if err != nil {
-					log.Fatal(err)
-				}
-				recorder = httptest.NewRecorder()
-				handler := http.HandlerFunc(Receiver)
-				handler.ServeHTTP(recorder, request)
 			})
 
 			It("Should result http.StatusOK", func() {
@@ -215,19 +170,10 @@ var _ = Describe("Emails", func() {
 				received.Data = data
 				received.IsTesting = true
 
-				requestBody := new(bytes.Buffer)
 				errr := json.NewEncoder(requestBody).Encode(received)
 				if errr != nil {
 					log.Fatal(errr)
 				}
-
-				request, err := http.NewRequest("POST", "/receive", requestBody)
-				if err != nil {
-					log.Fatal(err)
-				}
-				recorder = httptest.NewRecorder()
-				handler := http.HandlerFunc(Receiver)
-				handler.ServeHTTP(recorder, request)
 			})
 
 			It("Should result http.StatusBadRequest", func() {
