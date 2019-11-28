@@ -3,7 +3,6 @@ package messaging
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -39,9 +38,8 @@ var _ = Describe("Emails", func() {
 	Describe("Sending Emails", func() {
 		JustBeforeEach(func() {
 			request, err := http.NewRequest("POST", "/send", requestBody)
-			if err != nil {
-				log.Fatal(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
+
 			recorder = httptest.NewRecorder()
 			handler := http.HandlerFunc(Send)
 			handler.ServeHTTP(recorder, request)
@@ -62,10 +60,7 @@ var _ = Describe("Emails", func() {
 						Subject: "Testing microservice",
 						Body:    "Any body message to test"}
 
-					errr := json.NewEncoder(requestBody).Encode(email)
-					if errr != nil {
-						log.Fatal(errr)
-					}
+					Expect(json.NewEncoder(requestBody).Encode(email)).To(Succeed())
 				})
 
 				It("should result in a successful SMTP response", func() {
@@ -73,14 +68,10 @@ var _ = Describe("Emails", func() {
 				})
 			})
 
-			//Decoder test
 			When("an invalid body is sent in the request", func() {
 				BeforeEach(func() {
 					email := []byte(`{"invalid":body}`)
-					errr := json.NewEncoder(requestBody).Encode(email)
-					if errr != nil {
-						log.Fatal(errr)
-					}
+					Expect(json.NewEncoder(requestBody).Encode(email)).To(Succeed())
 				})
 
 				It("should result http.StatusBadRequest", func() {
@@ -91,11 +82,7 @@ var _ = Describe("Emails", func() {
 			When("the body does not contain required details", func() {
 				BeforeEach(func() {
 					email := Email{}
-					requestBody := new(bytes.Buffer)
-					errr := json.NewEncoder(requestBody).Encode(email)
-					if errr != nil {
-						log.Fatal(errr)
-					}
+					Expect(json.NewEncoder(requestBody).Encode(email)).To(Succeed())
 				})
 
 				It("should result http.StatusBadRequest", func() {
@@ -127,9 +114,8 @@ var _ = Describe("Emails", func() {
 	Describe("Receiving Emails", func() {
 		JustBeforeEach(func() {
 			request, err := http.NewRequest("POST", "/receive", requestBody)
-			if err != nil {
-				log.Fatal(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
+
 			recorder = httptest.NewRecorder()
 			handler := http.HandlerFunc(Receiver)
 			handler.ServeHTTP(recorder, request)
@@ -148,10 +134,7 @@ var _ = Describe("Emails", func() {
 				received.Data = data
 				received.IsTesting = true
 
-				errr := json.NewEncoder(requestBody).Encode(received)
-				if errr != nil {
-					log.Fatal(errr)
-				}
+				Expect(json.NewEncoder(requestBody).Encode(received)).To(Succeed())
 			})
 
 			It("Should result http.StatusOK", func() {
@@ -170,10 +153,7 @@ var _ = Describe("Emails", func() {
 				received.Data = data
 				received.IsTesting = true
 
-				errr := json.NewEncoder(requestBody).Encode(received)
-				if errr != nil {
-					log.Fatal(errr)
-				}
+				Expect(json.NewEncoder(requestBody).Encode(received)).To(Succeed())
 			})
 
 			It("Should result http.StatusBadRequest", func() {
