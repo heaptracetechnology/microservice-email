@@ -1,21 +1,14 @@
-FROM golang
+FROM golang:alpine AS builder
 
-RUN go get github.com/gorilla/mux
+COPY . /email
+WORKDIR /email
 
-RUN go get github.com/emersion/go-imap
+ENV GO111MODULE=on
+RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor -a -installsuffix nocgo -o /email .
 
-RUN go get github.com/emersion/go-message/mail
+FROM scratch
+COPY --from=builder /email ./
 
-RUN go get github.com/emersion/go-imap/client
-
-RUN go get github.com/cloudevents/sdk-go
-
-WORKDIR /go/src/github.com/oms-services/email
-
-ADD . /go/src/github.com/oms-services/email
-
-RUN go install github.com/oms-services/email
-
-ENTRYPOINT email
+CMD ["/email"]
 
 EXPOSE 3000
