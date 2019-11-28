@@ -2,14 +2,12 @@ package http
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/smtp"
 	"net/url"
 	"os"
 	"regexp"
@@ -20,6 +18,7 @@ import (
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
+	"github.com/oms-services/email/smtp"
 )
 
 type Email struct {
@@ -110,71 +109,22 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 
 	messageBody := param.BuildMessage()
 
-	auth := smtp.PlainAuth("", param.From, password, smtpHost)
-
-	// TLS config
-	tlsconfig := &tls.Config{
-		InsecureSkipVerify: true,
-		ServerName:         smtpHost,
-	}
-
 	smtpAddress := smtpHost + ":" + smtpPort
-
-	conn, connErr := tls.Dial("tcp", smtpAddress, tlsconfig)
-	if connErr != nil {
-		writeErrorResponse(responseWriter, connErr)
-		return
+	client := smtp.Client{
+		Address:  smtpAddress,
+		Password: password,
 	}
 
-	client, clientErr := smtp.NewClient(conn, smtpHost)
-	if clientErr != nil {
-		writeErrorResponse(responseWriter, clientErr)
-		return
-	}
-
-	if authErr := client.Auth(auth); authErr != nil {
-		writeErrorResponse(responseWriter, authErr)
-		return
-	}
-
-	if fromErr := client.Mail(param.From); fromErr != nil {
-		writeErrorResponse(responseWriter, fromErr)
-		return
-	}
-
-	for _, k := range param.To {
-		if rcptErr := client.Rcpt(k); rcptErr != nil {
-			writeErrorResponse(responseWriter, rcptErr)
-			return
-		}
-	}
-
-	// Data
-	w, dataErr := client.Data()
-	if dataErr != nil {
-		writeErrorResponse(responseWriter, dataErr)
-		return
-	}
-
-	_, writeErr := w.Write([]byte(messageBody))
-	if writeErr != nil {
-		writeErrorResponse(responseWriter, writeErr)
-		return
-	} else {
-
-		closeErr := w.Close()
-		if closeErr != nil {
-			writeErrorResponse(responseWriter, closeErr)
-			return
-		}
-
-		client.Quit()
-
-		message := Message{"true", "Mail sent successfully", 250}
+	if err := client.Send(param.From, param.To, messageBody); err != nil {
+		message := Message{"false", err.Error(), http.StatusBadRequest}
 		bytes, _ := json.Marshal(message)
-		writeJsonResponse(responseWriter, bytes, 250)
+		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
+		return
 	}
 
+	message := Message{"true", "Mail sent successfully", 250}
+	bytes, _ := json.Marshal(message)
+	writeJsonResponse(responseWriter, bytes, 250)
 }
 
 //Receiver Email

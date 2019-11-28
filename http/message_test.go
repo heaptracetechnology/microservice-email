@@ -56,7 +56,7 @@ var _ = Describe("Emails", func() {
 			BeforeEach(func() {
 				os.Setenv("PASSWORD", password)
 				os.Setenv("SMTP_HOST", "smtp.gmail.com")
-				os.Setenv("SMTP_PORT", "465")
+				os.Setenv("SMTP_PORT", "587")
 			})
 
 			When("a valid body is sent in the request", func() {
@@ -108,7 +108,7 @@ var _ = Describe("Emails", func() {
 			When("no smtp host is set", func() {
 				BeforeEach(func() {
 					os.Setenv("PASSWORD", password)
-					os.Setenv("SMTP_PORT", "465")
+					os.Setenv("SMTP_PORT", "587")
 				})
 
 				It("Should result http.StatusBadRequest", func() {
