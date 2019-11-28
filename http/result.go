@@ -1,4 +1,4 @@
-package result
+package http
 
 import (
 	"encoding/json"
@@ -6,12 +6,12 @@ import (
 	"net/http"
 )
 
-func WriteErrorResponse(responseWriter http.ResponseWriter, err error) {
+func writeErrorResponse(responseWriter http.ResponseWriter, err error) {
 	messageBytes, _ := json.Marshal(err)
-	WriteJsonResponse(responseWriter, messageBytes, http.StatusBadRequest)
+	writeJsonResponse(responseWriter, messageBytes, http.StatusBadRequest)
 }
 
-func WriteJsonResponse(responseWriter http.ResponseWriter, bytes []byte, statusCode int) {
+func writeJsonResponse(responseWriter http.ResponseWriter, bytes []byte, statusCode int) {
 	responseWriter.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	responseWriter.WriteHeader(statusCode)
 	_, err := responseWriter.Write(bytes)

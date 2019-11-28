@@ -1,4 +1,4 @@
-package messaging
+package http
 
 import (
 	"context"
@@ -20,7 +20,6 @@ import (
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
-	result "github.com/oms-services/email/result"
 )
 
 type Email struct {
@@ -90,7 +89,7 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 	if password == "" || smtpHost == "" || smtpPort == "" {
 		message := Message{"false", "Please provide environment variables", http.StatusBadRequest}
 		bytes, _ := json.Marshal(message)
-		result.WriteJsonResponse(responseWriter, bytes, http.StatusBadRequest)
+		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
 		return
 	}
 
@@ -98,14 +97,14 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 	var param Email
 	decodeErr := decoder.Decode(&param)
 	if decodeErr != nil {
-		result.WriteErrorResponse(responseWriter, decodeErr)
+		writeErrorResponse(responseWriter, decodeErr)
 		return
 	}
 
 	if param.From == "" || param.To == nil || param.Subject == "" || param.Body == "" {
 		message := Message{"false", "Please provide required details", http.StatusBadRequest}
 		bytes, _ := json.Marshal(message)
-		result.WriteJsonResponse(responseWriter, bytes, http.StatusBadRequest)
+		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
 		return
 	}
 
@@ -123,29 +122,29 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 
 	conn, connErr := tls.Dial("tcp", smtpAddress, tlsconfig)
 	if connErr != nil {
-		result.WriteErrorResponse(responseWriter, connErr)
+		writeErrorResponse(responseWriter, connErr)
 		return
 	}
 
 	client, clientErr := smtp.NewClient(conn, smtpHost)
 	if clientErr != nil {
-		result.WriteErrorResponse(responseWriter, clientErr)
+		writeErrorResponse(responseWriter, clientErr)
 		return
 	}
 
 	if authErr := client.Auth(auth); authErr != nil {
-		result.WriteErrorResponse(responseWriter, authErr)
+		writeErrorResponse(responseWriter, authErr)
 		return
 	}
 
 	if fromErr := client.Mail(param.From); fromErr != nil {
-		result.WriteErrorResponse(responseWriter, fromErr)
+		writeErrorResponse(responseWriter, fromErr)
 		return
 	}
 
 	for _, k := range param.To {
 		if rcptErr := client.Rcpt(k); rcptErr != nil {
-			result.WriteErrorResponse(responseWriter, rcptErr)
+			writeErrorResponse(responseWriter, rcptErr)
 			return
 		}
 	}
@@ -153,19 +152,19 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 	// Data
 	w, dataErr := client.Data()
 	if dataErr != nil {
-		result.WriteErrorResponse(responseWriter, dataErr)
+		writeErrorResponse(responseWriter, dataErr)
 		return
 	}
 
 	_, writeErr := w.Write([]byte(messageBody))
 	if writeErr != nil {
-		result.WriteErrorResponse(responseWriter, writeErr)
+		writeErrorResponse(responseWriter, writeErr)
 		return
 	} else {
 
 		closeErr := w.Close()
 		if closeErr != nil {
-			result.WriteErrorResponse(responseWriter, closeErr)
+			writeErrorResponse(responseWriter, closeErr)
 			return
 		}
 
@@ -173,7 +172,7 @@ func Send(responseWriter http.ResponseWriter, request *http.Request) {
 
 		message := Message{"true", "Mail sent successfully", 250}
 		bytes, _ := json.Marshal(message)
-		result.WriteJsonResponse(responseWriter, bytes, 250)
+		writeJsonResponse(responseWriter, bytes, 250)
 	}
 
 }
@@ -188,7 +187,7 @@ func Receiver(responseWriter http.ResponseWriter, request *http.Request) {
 	if password == "" || imapHost == "" || imapPort == "" {
 		message := Message{"false", "Please provide environment variables", http.StatusBadRequest}
 		bytes, _ := json.Marshal(message)
-		result.WriteJsonResponse(responseWriter, bytes, http.StatusBadRequest)
+		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
 		return
 	}
 
@@ -197,7 +196,7 @@ func Receiver(responseWriter http.ResponseWriter, request *http.Request) {
 	var sub Subscribe
 	decodeError := decoder.Decode(&sub)
 	if decodeError != nil {
-		result.WriteErrorResponse(responseWriter, decodeError)
+		writeErrorResponse(responseWriter, decodeError)
 		return
 	}
 
@@ -222,7 +221,7 @@ func Receiver(responseWriter http.ResponseWriter, request *http.Request) {
 	}
 
 	bytes, _ := json.Marshal("Subscribed")
-	result.WriteJsonResponse(responseWriter, bytes, http.StatusOK)
+	writeJsonResponse(responseWriter, bytes, http.StatusOK)
 }
 
 func MailRTM() {

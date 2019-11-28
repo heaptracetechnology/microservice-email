@@ -1,4 +1,4 @@
-package messaging_test
+package http_test
 
 import (
 	"fmt"
@@ -10,10 +10,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestMessagingSUIT(t *testing.T) {
+func TestHTTPSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
 	junitReporter := reporters.NewJUnitReporter("../test-report/cireport.txt")
-	RunSpecsWithDefaultAndCustomReporters(t, "Messaging Suit", []Reporter{junitReporter})
+	RunSpecsWithDefaultAndCustomReporters(t, "HTTP Suite", []Reporter{junitReporter})
 }
 
 func getEnvOrError(env string) string {

@@ -1,11 +1,10 @@
-package route
+package http
 
 import (
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/oms-services/email/messaging"
 )
 
 type Route struct {
@@ -22,13 +21,13 @@ var routes = Routes{
 		"SendEmail",
 		"POST",
 		"/send",
-		messaging.Send,
+		Send,
 	},
 	Route{
 		"ReceiveEmail",
 		"POST",
 		"/receive",
-		messaging.Receiver,
+		Receiver,
 	},
 	Route{
 		"Healthcheck",
