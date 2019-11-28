@@ -1,4 +1,4 @@
-package messaging
+package messaging_test
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 
+	. "github.com/oms-services/email/messaging"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

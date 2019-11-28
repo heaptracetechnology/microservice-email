@@ -1,4 +1,4 @@
-package messaging
+package messaging_test
 
 import (
 	"fmt"
