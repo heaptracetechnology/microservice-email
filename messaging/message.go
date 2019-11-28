@@ -5,11 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go"
-	"github.com/emersion/go-imap"
-	"github.com/emersion/go-imap/client"
-	"github.com/emersion/go-message/mail"
-	result "github.com/oms-services/email/result"
 	"io"
 	"io/ioutil"
 	"log"
@@ -20,6 +15,12 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/emersion/go-imap"
+	"github.com/emersion/go-imap/client"
+	"github.com/emersion/go-message/mail"
+	result "github.com/oms-services/email/result"
 )
 
 type Email struct {
@@ -342,10 +343,10 @@ func getMessageUpdates(userid string, sub Subscribe) {
 		}
 
 		switch h := p.Header.(type) {
-		case mail.TextHeader:
+		case *mail.InlineHeader:
 			b, _ := ioutil.ReadAll(p.Body)
 			receivedMessage.Message = string(b)
-		case mail.AttachmentHeader:
+		case *mail.AttachmentHeader:
 			filename, _ := h.Filename()
 			fmt.Println("Got attachment:", filename)
 		}
@@ -401,9 +402,9 @@ func getMessageUpdates(userid string, sub Subscribe) {
 		}
 		if resp != nil {
 			fmt.Printf("Response:\n%s\n", resp)
-			fmt.Printf("Got Event Response Context: %+v\n", resp.Context)
+			fmt.Printf("Got Event Response Context: %+v\n", resp)
 			data := event
-			if err := resp.DataAs(event); err != nil {
+			if err := evt.DataAs(event); err != nil {
 				fmt.Printf("Got Data Error: %s\n", err.Error())
 			}
 			fmt.Printf("Got Response Data: %+v\n", data)

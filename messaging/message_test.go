@@ -3,12 +3,13 @@ package messaging
 import (
 	"bytes"
 	"encoding/json"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var (
