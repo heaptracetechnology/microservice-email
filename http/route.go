@@ -31,12 +31,6 @@ var routes = Routes{
 		},
 	},
 	Route{
-		"ReceiveEmail",
-		"POST",
-		"/receive",
-		ReceiveHandler{},
-	},
-	Route{
 		"Healthcheck",
 		"Get",
 		"/healthcheck",
