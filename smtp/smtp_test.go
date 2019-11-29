@@ -41,7 +41,7 @@ var _ = Describe("SMTP Client", func() {
 		err = client.Send(emailToSend)
 	})
 
-	PWhen("a valid email is provided", func() {
+	When("a valid email is provided", func() {
 		It("sends emails successfully", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
