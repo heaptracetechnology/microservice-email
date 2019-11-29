@@ -91,8 +91,7 @@ func (h ReceiveHandler) ServeHTTP(responseWriter http.ResponseWriter, request *h
 		rtmStarted = true
 	}
 
-	message := Message{"true", "Subscribed", http.StatusOK}
-	writeJsonResponse(responseWriter, message)
+	writeSuccessResponse(responseWriter, "Subscribed", http.StatusOK)
 }
 
 func MailRTM() {

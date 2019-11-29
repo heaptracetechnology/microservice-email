@@ -21,6 +21,16 @@ func writeErrorResponse(responseWriter http.ResponseWriter, err error) {
 	writeJsonResponse(responseWriter, message)
 }
 
+func writeSuccessResponse(responseWriter http.ResponseWriter, msg string, statusCode int) {
+	message := Message{
+		Success:    "true",
+		Message:    msg,
+		StatusCode: statusCode,
+	}
+
+	writeJsonResponse(responseWriter, message)
+}
+
 func writeJsonResponse(responseWriter http.ResponseWriter, message Message) {
 	responseWriter.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	responseWriter.WriteHeader(message.StatusCode)

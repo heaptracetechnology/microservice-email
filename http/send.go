@@ -31,6 +31,5 @@ func (h SendHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http
 		return
 	}
 
-	message := Message{"true", "Mail sent successfully", 250}
-	writeJsonResponse(responseWriter, message)
+	writeSuccessResponse(responseWriter, "Mail sent successfully", 250)
 }
