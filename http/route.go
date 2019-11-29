@@ -3,6 +3,7 @@ package http
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 )
@@ -21,7 +22,11 @@ var routes = Routes{
 		"SendEmail",
 		"POST",
 		"/send",
-		SendHandler{},
+		SendHandler{
+			Password: os.Getenv("PASSWORD"),
+			SMTPHost: os.Getenv("SMTP_HOST"),
+			SMTPPort: os.Getenv("SMTP_PORT"),
+		},
 	},
 	Route{
 		"ReceiveEmail",

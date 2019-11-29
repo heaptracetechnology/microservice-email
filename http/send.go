@@ -3,20 +3,19 @@ package http
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 
 	"github.com/oms-services/email"
 	"github.com/oms-services/email/smtp"
 )
 
-type SendHandler struct{}
+type SendHandler struct {
+	Password string
+	SMTPHost string
+	SMTPPort string
+}
 
 func (h SendHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
-	var password = os.Getenv("PASSWORD")
-	var smtpHost = os.Getenv("SMTP_HOST")
-	var smtpPort = os.Getenv("SMTP_PORT")
-
-	if password == "" || smtpHost == "" || smtpPort == "" {
+	if h.Password == "" || h.SMTPHost == "" || h.SMTPPort == "" {
 		message := Message{"false", "Please provide environment variables", http.StatusBadRequest}
 		bytes, _ := json.Marshal(message)
 		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
@@ -40,10 +39,10 @@ func (h SendHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http
 
 	messageBody := param.BuildMessage()
 
-	smtpAddress := smtpHost + ":" + smtpPort
+	smtpAddress := h.SMTPHost + ":" + h.SMTPPort
 	client := smtp.Client{
 		Address:  smtpAddress,
-		Password: password,
+		Password: h.Password,
 	}
 
 	if err := client.Send(param.From, param.To, messageBody); err != nil {

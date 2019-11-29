@@ -30,15 +30,19 @@ var _ = Describe("Sending Emails", func() {
 	var (
 		recorder    *httptest.ResponseRecorder
 		requestBody *bytes.Buffer
+
+		handler SendHandler
 	)
 
 	BeforeEach(func() {
 		recorder = nil
 		requestBody = &bytes.Buffer{}
+		handler = SendHandler{
+			Password: password,
+			SMTPHost: "smtp.gmail.com",
+			SMTPPort: "587",
+		}
 
-		os.Unsetenv("PASSWORD")
-		os.Unsetenv("SMTP_HOST")
-		os.Unsetenv("SMTP_PORT")
 		os.Unsetenv("IMAP_HOST")
 		os.Unsetenv("IMAP_PORT")
 	})
@@ -48,17 +52,10 @@ var _ = Describe("Sending Emails", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		recorder = httptest.NewRecorder()
-		handler := SendHandler{}
 		handler.ServeHTTP(recorder, request)
 	})
 
-	When("all env vars are set correctly", func() {
-		BeforeEach(func() {
-			os.Setenv("PASSWORD", password)
-			os.Setenv("SMTP_HOST", "smtp.gmail.com")
-			os.Setenv("SMTP_PORT", "587")
-		})
-
+	When("all configuration is set correctly", func() {
 		When("a valid body is sent in the request", func() {
 			BeforeEach(func() {
 				email := email.Email{
@@ -98,8 +95,14 @@ var _ = Describe("Sending Emails", func() {
 		})
 	})
 
-	When("not all env vars are set", func() {
-		When("no env vars are set", func() {
+	When("not all configuration is set correctly", func() {
+		When("no configuration is set", func() {
+			BeforeEach(func() {
+				handler.Password = ""
+				handler.SMTPHost = ""
+				handler.SMTPPort = ""
+			})
+
 			It("Should result http.StatusOK", func() {
 				Expect(recorder.Code).To(Equal(http.StatusBadRequest))
 			})
@@ -107,8 +110,7 @@ var _ = Describe("Sending Emails", func() {
 
 		When("no smtp host is set", func() {
 			BeforeEach(func() {
-				os.Setenv("PASSWORD", password)
-				os.Setenv("SMTP_PORT", "587")
+				handler.SMTPHost = ""
 			})
 
 			It("Should result http.StatusBadRequest", func() {
