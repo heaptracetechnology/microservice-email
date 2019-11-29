@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 
+	"github.com/oms-services/email"
 	. "github.com/oms-services/email/http"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -60,7 +61,7 @@ var _ = Describe("Sending Emails", func() {
 
 		When("a valid body is sent in the request", func() {
 			BeforeEach(func() {
-				email := Email{
+				email := email.Email{
 					From:    from,
 					To:      []string{to},
 					Subject: "Testing microservice",
@@ -87,7 +88,7 @@ var _ = Describe("Sending Emails", func() {
 
 		When("the body does not contain required details", func() {
 			BeforeEach(func() {
-				email := Email{}
+				email := email.Email{}
 				Expect(json.NewEncoder(requestBody).Encode(email)).To(Succeed())
 			})
 

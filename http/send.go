@@ -2,32 +2,12 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
+	"github.com/oms-services/email"
 	"github.com/oms-services/email/smtp"
 )
-
-type Email struct {
-	Subject string   `json:"subject,omitempty"`
-	Body    string   `json:"message,omitempty"`
-	From    string   `json:"from,omitempty"`
-	To      []string `json:"to,omitempty"`
-}
-
-func (mail *Email) BuildMessage() string {
-	message := ""
-	message += fmt.Sprintf("From: %s\r\n", mail.From)
-	if len(mail.To) > 0 {
-		message += fmt.Sprintf("To: %s\r\n", strings.Join(mail.To, ";"))
-	}
-	message += fmt.Sprintf("Subject: %s\r\n", mail.Subject)
-	message += "\r\n" + mail.Body
-
-	return message
-}
 
 type SendHandler struct{}
 
@@ -44,7 +24,7 @@ func (h SendHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http
 	}
 
 	decoder := json.NewDecoder(request.Body)
-	var param Email
+	var param email.Email
 	decodeErr := decoder.Decode(&param)
 	if decodeErr != nil {
 		writeErrorResponse(responseWriter, decodeErr)

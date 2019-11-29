@@ -33,7 +33,6 @@ var _ = Describe("Receiving Emails", func() {
 	JustBeforeEach(func() {
 		request, err := http.NewRequest("POST", "/receive", requestBody)
 		Expect(err).NotTo(HaveOccurred())
-
 		recorder = httptest.NewRecorder()
 		handler := ReceiveHandler{}
 		handler.ServeHTTP(recorder, request)
