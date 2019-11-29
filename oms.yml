@@ -12,8 +12,7 @@ info:
     email: core@openmicroservices.org
 lifecycle:
   startup:
-    command:
-      - email
+    command: ["server"]
 health:
   http:
     path: /healthcheck
