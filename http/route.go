@@ -3,10 +3,8 @@ package http
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/oms-services/email/smtp"
 )
 
 type Route struct {
@@ -16,35 +14,7 @@ type Route struct {
 	Handler http.Handler
 }
 
-type Routes []Route
-
-var routes = Routes{
-	Route{
-		"SendEmail",
-		"POST",
-		"/send",
-		SendHandler{
-			Emailer: smtp.Client{
-				Address:  os.Getenv("SMTP_HOST") + ":" + os.Getenv("SMTP_PORT"),
-				Password: os.Getenv("PASSWORD"),
-			},
-		},
-	},
-	Route{
-		"ReceiveEmail",
-		"POST",
-		"/receive",
-		ReceiveHandler{},
-	},
-	Route{
-		"Healthcheck",
-		"Get",
-		"/healthcheck",
-		HealthcheckHandler{},
-	},
-}
-
-func NewRouter() *mux.Router {
+func NewRouter(routes []Route) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
 		log.Println(route.Name)

@@ -5,14 +5,23 @@ import (
 	"os"
 
 	"github.com/oms-services/email/http"
+	"github.com/oms-services/email/smtp"
 )
 
 func main() {
-	getEnvOrExit("SMTP_HOST")
-	getEnvOrExit("SMTP_PORT")
-	getEnvOrExit("PASSWORD")
+	smtpHost := getEnvOrExit("SMTP_HOST")
+	smtpPort := getEnvOrExit("SMTP_PORT")
+	password := getEnvOrExit("PASSWORD")
 
-	server := http.Server{}
+	smtpClient := smtp.Client{
+		Address:  smtpHost + ":" + smtpPort,
+		Password: password,
+	}
+
+	server := http.Server{
+		Emailer: smtpClient,
+	}
+
 	if err := server.Start(); err != nil {
 		panic(err)
 	}
