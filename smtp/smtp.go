@@ -5,6 +5,7 @@ import (
 
 	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
+	"github.com/oms-services/email"
 )
 
 type Client struct {
@@ -12,7 +13,8 @@ type Client struct {
 	Password string
 }
 
-func (s Client) Send(from string, to []string, msg string) error {
-	auth := sasl.NewPlainClient("", from, s.Password)
-	return smtp.SendMail(s.Address, auth, from, to, strings.NewReader(msg))
+func (s Client) Send(email email.Email) error {
+	auth := sasl.NewPlainClient("", email.From, s.Password)
+	msg := strings.NewReader(email.BuildMessage())
+	return smtp.SendMail(s.Address, auth, email.From, email.To, msg)
 }

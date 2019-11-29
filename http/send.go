@@ -10,7 +10,7 @@ import (
 //go:generate counterfeiter . Emailer
 
 type Emailer interface {
-	Send(from string, to []string, msg string) error
+	Send(email email.Email) error
 }
 
 type SendHandler struct {
@@ -44,9 +44,7 @@ func (h SendHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http
 		return
 	}
 
-	messageBody := param.BuildMessage()
-
-	if err := h.Emailer.Send(param.From, param.To, messageBody); err != nil {
+	if err := h.Emailer.Send(param); err != nil {
 		message := Message{"false", err.Error(), http.StatusBadRequest}
 		bytes, _ := json.Marshal(message)
 		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)

@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/oms-services/email"
 	. "github.com/oms-services/email/smtp"
 )
 
@@ -25,7 +26,14 @@ var _ = Describe("SMTP Client", func() {
 		from := getEnvOrError("EMAIL_FROM")
 		to := getEnvOrError("EMAIL_TO")
 
-		Expect(client.Send(from, []string{to}, "test message")).To(Succeed())
+		email := email.Email{
+			Subject: "Test Subject",
+			Body:    "Test Body",
+			From:    from,
+			To:      []string{to},
+		}
+
+		Expect(client.Send(email)).To(Succeed())
 	})
 })
 

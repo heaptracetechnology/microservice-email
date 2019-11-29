@@ -4,16 +4,15 @@ package httpfakes
 import (
 	"sync"
 
+	"github.com/oms-services/email"
 	"github.com/oms-services/email/http"
 )
 
 type FakeEmailer struct {
-	SendStub        func(string, []string, string) error
+	SendStub        func(email.Email) error
 	sendMutex       sync.RWMutex
 	sendArgsForCall []struct {
-		arg1 string
-		arg2 []string
-		arg3 string
+		arg1 email.Email
 	}
 	sendReturns struct {
 		result1 error
@@ -25,23 +24,16 @@ type FakeEmailer struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeEmailer) Send(arg1 string, arg2 []string, arg3 string) error {
-	var arg2Copy []string
-	if arg2 != nil {
-		arg2Copy = make([]string, len(arg2))
-		copy(arg2Copy, arg2)
-	}
+func (fake *FakeEmailer) Send(arg1 email.Email) error {
 	fake.sendMutex.Lock()
 	ret, specificReturn := fake.sendReturnsOnCall[len(fake.sendArgsForCall)]
 	fake.sendArgsForCall = append(fake.sendArgsForCall, struct {
-		arg1 string
-		arg2 []string
-		arg3 string
-	}{arg1, arg2Copy, arg3})
-	fake.recordInvocation("Send", []interface{}{arg1, arg2Copy, arg3})
+		arg1 email.Email
+	}{arg1})
+	fake.recordInvocation("Send", []interface{}{arg1})
 	fake.sendMutex.Unlock()
 	if fake.SendStub != nil {
-		return fake.SendStub(arg1, arg2, arg3)
+		return fake.SendStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
@@ -56,17 +48,17 @@ func (fake *FakeEmailer) SendCallCount() int {
 	return len(fake.sendArgsForCall)
 }
 
-func (fake *FakeEmailer) SendCalls(stub func(string, []string, string) error) {
+func (fake *FakeEmailer) SendCalls(stub func(email.Email) error) {
 	fake.sendMutex.Lock()
 	defer fake.sendMutex.Unlock()
 	fake.SendStub = stub
 }
 
-func (fake *FakeEmailer) SendArgsForCall(i int) (string, []string, string) {
+func (fake *FakeEmailer) SendArgsForCall(i int) email.Email {
 	fake.sendMutex.RLock()
 	defer fake.sendMutex.RUnlock()
 	argsForCall := fake.sendArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1
 }
 
 func (fake *FakeEmailer) SendReturns(result1 error) {
