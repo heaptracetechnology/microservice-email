@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/oms-services/email/smtp"
 )
 
 type Route struct {
@@ -23,6 +24,10 @@ var routes = Routes{
 		"POST",
 		"/send",
 		SendHandler{
+			Emailer: smtp.Client{
+				Address:  os.Getenv("SMTP_HOST") + ":" + os.Getenv("SMTP_PORT"),
+				Password: os.Getenv("PASSWORD"),
+			},
 			Password: os.Getenv("PASSWORD"),
 			SMTPHost: os.Getenv("SMTP_HOST"),
 			SMTPPort: os.Getenv("SMTP_PORT"),

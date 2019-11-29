@@ -5,10 +5,17 @@ import (
 	"net/http"
 
 	"github.com/oms-services/email"
-	"github.com/oms-services/email/smtp"
 )
 
+//go:generate counterfeiter . Emailer
+
+type Emailer interface {
+	Send(from string, to []string, msg string) error
+}
+
 type SendHandler struct {
+	Emailer Emailer
+
 	Password string
 	SMTPHost string
 	SMTPPort string
@@ -39,13 +46,7 @@ func (h SendHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http
 
 	messageBody := param.BuildMessage()
 
-	smtpAddress := h.SMTPHost + ":" + h.SMTPPort
-	client := smtp.Client{
-		Address:  smtpAddress,
-		Password: h.Password,
-	}
-
-	if err := client.Send(param.From, param.To, messageBody); err != nil {
+	if err := h.Emailer.Send(param.From, param.To, messageBody); err != nil {
 		message := Message{"false", err.Error(), http.StatusBadRequest}
 		bytes, _ := json.Marshal(message)
 		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)

@@ -3,12 +3,14 @@ package http_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
 
 	"github.com/oms-services/email"
 	. "github.com/oms-services/email/http"
+	"github.com/oms-services/email/http/httpfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -25,9 +27,10 @@ var _ = BeforeSuite(func() {
 	from = getEnvOrError("EMAIL_FROM")
 })
 
-var _ = Describe("Sending Emails", func() {
+var _ = FDescribe("Sending Emails", func() {
 
 	var (
+		emailer     *httpfakes.FakeEmailer
 		recorder    *httptest.ResponseRecorder
 		requestBody *bytes.Buffer
 
@@ -35,9 +38,14 @@ var _ = Describe("Sending Emails", func() {
 	)
 
 	BeforeEach(func() {
+		emailer = &httpfakes.FakeEmailer{}
+
 		recorder = nil
 		requestBody = &bytes.Buffer{}
+
 		handler = SendHandler{
+			Emailer: emailer,
+
 			Password: password,
 			SMTPHost: "smtp.gmail.com",
 			SMTPPort: "587",
@@ -67,8 +75,24 @@ var _ = Describe("Sending Emails", func() {
 				Expect(json.NewEncoder(requestBody).Encode(email)).To(Succeed())
 			})
 
-			It("should result in a successful SMTP response", func() {
-				Expect(recorder.Code).To(Equal(250))
+			When("emailing is successful", func() {
+				BeforeEach(func() {
+					emailer.SendReturns(nil)
+				})
+
+				It("should result in a successful SMTP response", func() {
+					Expect(recorder.Code).To(Equal(250))
+				})
+			})
+
+			When("emailing is unsuccessful", func() {
+				BeforeEach(func() {
+					emailer.SendReturns(errors.New("explode"))
+				})
+
+				It("should result http.StatusBadRequest", func() {
+					Expect(recorder.Code).To(Equal(http.StatusBadRequest))
+				})
 			})
 		})
 
