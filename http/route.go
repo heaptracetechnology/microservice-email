@@ -8,10 +8,10 @@ import (
 )
 
 type Route struct {
-	Name        string
-	Method      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
+	Name    string
+	Method  string
+	Pattern string
+	Handler http.Handler
 }
 
 type Routes []Route
@@ -21,38 +21,33 @@ var routes = Routes{
 		"SendEmail",
 		"POST",
 		"/send",
-		Send,
+		SendHandler{},
 	},
 	Route{
 		"ReceiveEmail",
 		"POST",
 		"/receive",
-		Receiver,
+		ReceiveHandler{},
 	},
 	Route{
 		"Healthcheck",
 		"Get",
 		"/healthcheck",
-		healthcheck,
+		HealthcheckHandler{},
 	},
-}
-
-func healthcheck(responseWriter http.ResponseWriter, request *http.Request) {
-	responseWriter.WriteHeader(http.StatusOK)
 }
 
 func NewRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
-		var handler http.Handler
 		log.Println(route.Name)
-		handler = route.HandlerFunc
 
 		router.
 			Methods(route.Method).
 			Path(route.Pattern).
 			Name(route.Name).
-			Handler(handler)
+			Handler(route.Handler)
 	}
+
 	return router
 }

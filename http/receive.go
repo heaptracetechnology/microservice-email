@@ -11,22 +11,13 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
-	"github.com/oms-services/email/smtp"
 )
-
-type Email struct {
-	Subject string   `json:"subject,omitempty"`
-	Body    string   `json:"message,omitempty"`
-	From    string   `json:"from,omitempty"`
-	To      []string `json:"to,omitempty"`
-}
 
 type Payload struct {
 	EventId     string       `json:"eventID"`
@@ -55,81 +46,13 @@ type RequestParam struct {
 	Label    string `json:"label"`
 }
 
-type Message struct {
-	Success    string `json:"success"`
-	Message    string `json:"message"`
-	StatusCode int    `json:"statusCode"`
-}
-
 var Listener = make(map[string]Subscribe)
 var rtmStarted bool
 var newClient *client.Client
 
-//BuildMessage
-func (mail *Email) BuildMessage() string {
-	message := ""
-	message += fmt.Sprintf("From: %s\r\n", mail.From)
-	if len(mail.To) > 0 {
-		message += fmt.Sprintf("To: %s\r\n", strings.Join(mail.To, ";"))
-	}
-	message += fmt.Sprintf("Subject: %s\r\n", mail.Subject)
-	message += "\r\n" + mail.Body
+type ReceiveHandler struct{}
 
-	return message
-}
-
-//Send Email
-func Send(responseWriter http.ResponseWriter, request *http.Request) {
-
-	var password = os.Getenv("PASSWORD")
-	var smtpHost = os.Getenv("SMTP_HOST")
-	var smtpPort = os.Getenv("SMTP_PORT")
-
-	if password == "" || smtpHost == "" || smtpPort == "" {
-		message := Message{"false", "Please provide environment variables", http.StatusBadRequest}
-		bytes, _ := json.Marshal(message)
-		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
-		return
-	}
-
-	decoder := json.NewDecoder(request.Body)
-	var param Email
-	decodeErr := decoder.Decode(&param)
-	if decodeErr != nil {
-		writeErrorResponse(responseWriter, decodeErr)
-		return
-	}
-
-	if param.From == "" || param.To == nil || param.Subject == "" || param.Body == "" {
-		message := Message{"false", "Please provide required details", http.StatusBadRequest}
-		bytes, _ := json.Marshal(message)
-		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
-		return
-	}
-
-	messageBody := param.BuildMessage()
-
-	smtpAddress := smtpHost + ":" + smtpPort
-	client := smtp.Client{
-		Address:  smtpAddress,
-		Password: password,
-	}
-
-	if err := client.Send(param.From, param.To, messageBody); err != nil {
-		message := Message{"false", err.Error(), http.StatusBadRequest}
-		bytes, _ := json.Marshal(message)
-		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
-		return
-	}
-
-	message := Message{"true", "Mail sent successfully", 250}
-	bytes, _ := json.Marshal(message)
-	writeJsonResponse(responseWriter, bytes, 250)
-}
-
-//Receiver Email
-func Receiver(responseWriter http.ResponseWriter, request *http.Request) {
-
+func (h ReceiveHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
 	var password = os.Getenv("PASSWORD")
 	var imapHost = os.Getenv("IMAP_HOST")
 	var imapPort = os.Getenv("IMAP_PORT")

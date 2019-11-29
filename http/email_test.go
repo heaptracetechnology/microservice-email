@@ -48,7 +48,7 @@ var _ = Describe("Emails", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			recorder = httptest.NewRecorder()
-			handler := http.HandlerFunc(Send)
+			handler := SendHandler{}
 			handler.ServeHTTP(recorder, request)
 		})
 
@@ -124,7 +124,7 @@ var _ = Describe("Emails", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			recorder = httptest.NewRecorder()
-			handler := http.HandlerFunc(Receiver)
+			handler := ReceiveHandler{}
 			handler.ServeHTTP(recorder, request)
 		})
 

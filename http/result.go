@@ -6,6 +6,12 @@ import (
 	"net/http"
 )
 
+type Message struct {
+	Success    string `json:"success"`
+	Message    string `json:"message"`
+	StatusCode int    `json:"statusCode"`
+}
+
 func writeErrorResponse(responseWriter http.ResponseWriter, err error) {
 	messageBytes, _ := json.Marshal(err)
 	writeJsonResponse(responseWriter, messageBytes, http.StatusBadRequest)

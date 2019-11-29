@@ -14,7 +14,7 @@ var serverPath string
 
 var _ = BeforeSuite(func() {
 	var err error
-	serverPath, err = gexec.Build("github.com/oms-services/email")
+	serverPath, err = gexec.Build("github.com/oms-services/email/cmd/server")
 	Expect(err).NotTo(HaveOccurred())
 })
 
