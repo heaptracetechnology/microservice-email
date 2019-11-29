@@ -27,7 +27,7 @@ var _ = BeforeSuite(func() {
 	from = getEnvOrError("EMAIL_FROM")
 })
 
-var _ = FDescribe("Sending Emails", func() {
+var _ = Describe("Sending Emails", func() {
 
 	var (
 		emailer     *httpfakes.FakeEmailer
@@ -45,10 +45,6 @@ var _ = FDescribe("Sending Emails", func() {
 
 		handler = SendHandler{
 			Emailer: emailer,
-
-			Password: password,
-			SMTPHost: "smtp.gmail.com",
-			SMTPPort: "587",
 		}
 
 		os.Unsetenv("IMAP_HOST")
@@ -63,49 +59,36 @@ var _ = FDescribe("Sending Emails", func() {
 		handler.ServeHTTP(recorder, request)
 	})
 
-	When("all configuration is set correctly", func() {
-		When("a valid body is sent in the request", func() {
-			var emailToSend email.Email
+	When("a valid body is sent in the request", func() {
+		var emailToSend email.Email
+		BeforeEach(func() {
+			emailToSend = email.Email{
+				From:    from,
+				To:      []string{to},
+				Subject: "Testing microservice",
+				Body:    "Any body message to test"}
+
+			Expect(json.NewEncoder(requestBody).Encode(emailToSend)).To(Succeed())
+		})
+
+		It("should attempt to send the email", func() {
+			Expect(emailer.SendCallCount()).To(Equal(1))
+			Expect(emailer.SendArgsForCall(0)).To(Equal(emailToSend))
+		})
+
+		When("emailing is successful", func() {
 			BeforeEach(func() {
-				emailToSend = email.Email{
-					From:    from,
-					To:      []string{to},
-					Subject: "Testing microservice",
-					Body:    "Any body message to test"}
-
-				Expect(json.NewEncoder(requestBody).Encode(emailToSend)).To(Succeed())
+				emailer.SendReturns(nil)
 			})
 
-			It("should attempt to send the email", func() {
-				Expect(emailer.SendCallCount()).To(Equal(1))
-				Expect(emailer.SendArgsForCall(0)).To(Equal(emailToSend))
-			})
-
-			When("emailing is successful", func() {
-				BeforeEach(func() {
-					emailer.SendReturns(nil)
-				})
-
-				It("should result in a successful SMTP response", func() {
-					Expect(recorder.Code).To(Equal(250))
-				})
-			})
-
-			When("emailing is unsuccessful", func() {
-				BeforeEach(func() {
-					emailer.SendReturns(errors.New("explode"))
-				})
-
-				It("should result http.StatusBadRequest", func() {
-					Expect(recorder.Code).To(Equal(http.StatusBadRequest))
-				})
+			It("should result in a successful SMTP response", func() {
+				Expect(recorder.Code).To(Equal(250))
 			})
 		})
 
-		When("an invalid body is sent in the request", func() {
+		When("emailing is unsuccessful", func() {
 			BeforeEach(func() {
-				email := []byte(`{"invalid":body}`)
-				Expect(json.NewEncoder(requestBody).Encode(email)).To(Succeed())
+				emailer.SendReturns(errors.New("explode"))
 			})
 
 			It("should result http.StatusBadRequest", func() {
@@ -114,27 +97,14 @@ var _ = FDescribe("Sending Emails", func() {
 		})
 	})
 
-	When("not all configuration is set correctly", func() {
-		When("no configuration is set", func() {
-			BeforeEach(func() {
-				handler.Password = ""
-				handler.SMTPHost = ""
-				handler.SMTPPort = ""
-			})
-
-			It("Should result http.StatusOK", func() {
-				Expect(recorder.Code).To(Equal(http.StatusBadRequest))
-			})
+	When("an invalid body is sent in the request", func() {
+		BeforeEach(func() {
+			email := []byte(`{"invalid":body}`)
+			Expect(json.NewEncoder(requestBody).Encode(email)).To(Succeed())
 		})
 
-		When("no smtp host is set", func() {
-			BeforeEach(func() {
-				handler.SMTPHost = ""
-			})
-
-			It("Should result http.StatusBadRequest", func() {
-				Expect(recorder.Code).To(Equal(http.StatusBadRequest))
-			})
+		It("should result http.StatusBadRequest", func() {
+			Expect(recorder.Code).To(Equal(http.StatusBadRequest))
 		})
 	})
 })

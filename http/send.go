@@ -15,25 +15,14 @@ type Emailer interface {
 
 type SendHandler struct {
 	Emailer Emailer
-
-	Password string
-	SMTPHost string
-	SMTPPort string
 }
 
 func (h SendHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
-	if h.Password == "" || h.SMTPHost == "" || h.SMTPPort == "" {
-		message := Message{"false", "Please provide environment variables", http.StatusBadRequest}
-		bytes, _ := json.Marshal(message)
-		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
-		return
-	}
-
 	decoder := json.NewDecoder(request.Body)
+
 	var param email.Email
-	decodeErr := decoder.Decode(&param)
-	if decodeErr != nil {
-		writeErrorResponse(responseWriter, decodeErr)
+	if err := decoder.Decode(&param); err != nil {
+		writeErrorResponse(responseWriter, err)
 		return
 	}
 

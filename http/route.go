@@ -28,9 +28,6 @@ var routes = Routes{
 				Address:  os.Getenv("SMTP_HOST") + ":" + os.Getenv("SMTP_PORT"),
 				Password: os.Getenv("PASSWORD"),
 			},
-			Password: os.Getenv("PASSWORD"),
-			SMTPHost: os.Getenv("SMTP_HOST"),
-			SMTPPort: os.Getenv("SMTP_PORT"),
 		},
 	},
 	Route{
