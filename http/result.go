@@ -6,14 +6,14 @@ import (
 )
 
 type Message struct {
-	Success    string `json:"success"`
+	Success    bool   `json:"success"`
 	Message    string `json:"message"`
 	StatusCode int    `json:"statusCode"`
 }
 
 func writeErrorResponse(responseWriter http.ResponseWriter, err error) {
 	message := Message{
-		Success:    "false",
+		Success:    false,
 		Message:    err.Error(),
 		StatusCode: http.StatusBadRequest,
 	}
@@ -23,7 +23,7 @@ func writeErrorResponse(responseWriter http.ResponseWriter, err error) {
 
 func writeSuccessResponse(responseWriter http.ResponseWriter, msg string, statusCode int) {
 	message := Message{
-		Success:    "true",
+		Success:    true,
 		Message:    msg,
 		StatusCode: statusCode,
 	}
