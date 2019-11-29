@@ -58,9 +58,7 @@ func (h ReceiveHandler) ServeHTTP(responseWriter http.ResponseWriter, request *h
 	var imapPort = os.Getenv("IMAP_PORT")
 
 	if password == "" || imapHost == "" || imapPort == "" {
-		message := Message{"false", "Please provide environment variables", http.StatusBadRequest}
-		bytes, _ := json.Marshal(message)
-		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
+		writeErrorResponse(responseWriter, fmt.Errorf("Please provide environment variables"))
 		return
 	}
 
@@ -93,8 +91,8 @@ func (h ReceiveHandler) ServeHTTP(responseWriter http.ResponseWriter, request *h
 		rtmStarted = true
 	}
 
-	bytes, _ := json.Marshal("Subscribed")
-	writeJsonResponse(responseWriter, bytes, http.StatusOK)
+	message := Message{"true", "Subscribed", http.StatusOK}
+	writeJsonResponse(responseWriter, message)
 }
 
 func MailRTM() {

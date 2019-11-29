@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
@@ -13,15 +12,18 @@ type Message struct {
 }
 
 func writeErrorResponse(responseWriter http.ResponseWriter, err error) {
-	messageBytes, _ := json.Marshal(err)
-	writeJsonResponse(responseWriter, messageBytes, http.StatusBadRequest)
+	message := Message{
+		Success:    "false",
+		Message:    err.Error(),
+		StatusCode: http.StatusBadRequest,
+	}
+
+	writeJsonResponse(responseWriter, message)
 }
 
-func writeJsonResponse(responseWriter http.ResponseWriter, bytes []byte, statusCode int) {
+func writeJsonResponse(responseWriter http.ResponseWriter, message Message) {
 	responseWriter.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	responseWriter.WriteHeader(statusCode)
-	_, err := responseWriter.Write(bytes)
-	if err != nil {
-		log.Println(err)
-	}
+	responseWriter.WriteHeader(message.StatusCode)
+	bytes, _ := json.Marshal(message)
+	responseWriter.Write(bytes)
 }
