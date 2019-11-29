@@ -37,13 +37,6 @@ func (h SendHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http
 		return
 	}
 
-	if param.From == "" || param.To == nil || param.Subject == "" || param.Body == "" {
-		message := Message{"false", "Please provide required details", http.StatusBadRequest}
-		bytes, _ := json.Marshal(message)
-		writeJsonResponse(responseWriter, bytes, http.StatusBadRequest)
-		return
-	}
-
 	if err := h.Emailer.Send(param); err != nil {
 		message := Message{"false", err.Error(), http.StatusBadRequest}
 		bytes, _ := json.Marshal(message)

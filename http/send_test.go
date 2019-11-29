@@ -65,14 +65,20 @@ var _ = FDescribe("Sending Emails", func() {
 
 	When("all configuration is set correctly", func() {
 		When("a valid body is sent in the request", func() {
+			var emailToSend email.Email
 			BeforeEach(func() {
-				email := email.Email{
+				emailToSend = email.Email{
 					From:    from,
 					To:      []string{to},
 					Subject: "Testing microservice",
 					Body:    "Any body message to test"}
 
-				Expect(json.NewEncoder(requestBody).Encode(email)).To(Succeed())
+				Expect(json.NewEncoder(requestBody).Encode(emailToSend)).To(Succeed())
+			})
+
+			It("should attempt to send the email", func() {
+				Expect(emailer.SendCallCount()).To(Equal(1))
+				Expect(emailer.SendArgsForCall(0)).To(Equal(emailToSend))
 			})
 
 			When("emailing is successful", func() {
@@ -99,17 +105,6 @@ var _ = FDescribe("Sending Emails", func() {
 		When("an invalid body is sent in the request", func() {
 			BeforeEach(func() {
 				email := []byte(`{"invalid":body}`)
-				Expect(json.NewEncoder(requestBody).Encode(email)).To(Succeed())
-			})
-
-			It("should result http.StatusBadRequest", func() {
-				Expect(recorder.Code).To(Equal(http.StatusBadRequest))
-			})
-		})
-
-		When("the body does not contain required details", func() {
-			BeforeEach(func() {
-				email := email.Email{}
 				Expect(json.NewEncoder(requestBody).Encode(email)).To(Succeed())
 			})
 
