@@ -12,8 +12,11 @@ info:
     email: core@openmicroservices.org
 lifecycle:
   startup:
-    command:
-      - email
+    command: ["server"]
+health:
+  http:
+    path: /healthcheck
+    port: 3000
 actions:
   send:
     help: Send email
