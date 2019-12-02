@@ -1,8 +1,8 @@
 oms: 1
 info:
   version: 1.0.0
-  title: Email
-  description: This is a email service
+  title: SMTP
+  description: This service allows interaction with SMTP
   license:
     name: MIT
     url: 'https://opensource.org/licenses/MIT'
@@ -12,8 +12,11 @@ info:
     email: core@openmicroservices.org
 lifecycle:
   startup:
-    command:
-      - email
+    command: ["server"]
+health:
+  http:
+    path: /healthcheck
+    port: 3000
 actions:
   send:
     help: Send email
@@ -56,50 +59,6 @@ actions:
         statusCode:
           help: SMTP status code.
           type: int
-  receive:
-    help: Start receiving  emails
-    events:
-      mail:
-        help: Triggered anytime when any new email is occurred in mail inbox.
-        arguments:
-          username:
-            type: string
-            in: requestBody
-            required: true
-            help: The receiver account email address.
-          pattern:
-            type: string
-            in: requestBody
-            help: 'The text pattern to filter sender, subject and message body.'
-          label:
-            type: string
-            in: requestBody
-            help: >-
-              The label to retrieve specific email from mailbox, and if label is
-              invalid then INBOX is selected by default.
-        http:
-          port: 3000
-          subscribe:
-            method: post
-            path: /receive
-            contentType: application/json
-          unsubscribe:
-            path: /unsubscribe
-            method: post
-            contentType: application/json
-        output:
-          contentType: application/json
-          type: object
-          properties:
-            subject:
-              help: The subject of received mail
-              type: string
-            from:
-              help: The object of sender details with name and email address
-              type: map
-            message:
-              help: The message body of mail or error message if occurred
-              type: string
 environment:
   PASSWORD:
     type: string
@@ -107,13 +66,9 @@ environment:
     help: The password of sender mail account.
   SMTP_HOST:
     type: string
+    required: true
     help: The SMTP host
   SMTP_PORT:
     type: string
+    required: true
     help: The port number for SMTP
-  IMAP_HOST:
-    type: string
-    help: The IMAP host
-  IMAP_PORT:
-    type: string
-    help: The IMAP port

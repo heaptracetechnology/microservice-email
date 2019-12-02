@@ -1,6 +1,6 @@
-# _Email_ Open Microservice
+# _SMTP_ Open Microservice
 
-> This is a email service
+> This is a service to interact with SMTP
 
 [![Open Microservice Specification Version](https://img.shields.io/badge/Open%20Microservice-1.0-477bf3.svg)](https://openmicroservices.org)
 [![Open Microservices Spectrum Chat](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/open-microservices)
@@ -63,38 +63,7 @@ oms run send \
     -a message='*****' \
     -e PASSWORD=$PASSWORD \
     -e SMTP_HOST=$SMTP_HOST \
-    -e SMTP_PORT=$SMTP_PORT \
-    -e IMAP_HOST=$IMAP_HOST \
-    -e IMAP_PORT=$IMAP_PORT
-```
-
-##### mail
-
-> Triggered anytime when any new email is occurred in mail inbox.
-
-##### Action Arguments
-
-| Argument Name | Type     | Required | Default | Description                                                                                                   |
-| :------------ | :------- | :------- | :------ | :------------------------------------------------------------------------------------------------------------ |
-| username      | `string` | `true`   | None    | The receiver account email address.                                                                           |
-| pattern       | `string` | `false`  | None    | The text pattern to filter sender, subject and message body.                                                  |
-| label         | `string` | `false`  | None    | The label to retrieve specific email from mailbox, and if label is invalid then INBOX is selected by default. |
-| PASSWORD      | `string` | `true`   | None    | The password of sender mail account.                                                                          |
-| SMTP_HOST     | `string` | `false`  | None    | The SMTP host                                                                                                 |
-| SMTP_PORT     | `string` | `false`  | None    | The port number for SMTP                                                                                      |
-| IMAP_HOST     | `string` | `false`  | None    | The IMAP host                                                                                                 |
-| IMAP_PORT     | `string` | `false`  | None    | The IMAP port                                                                                                 |
-
-```shell
-oms subscribe mail \
-    -a username='*****' \
-    -a pattern='*****' \
-    -a label='*****' \
-    -e PASSWORD=$PASSWORD \
-    -e SMTP_HOST=$SMTP_HOST \
-    -e SMTP_PORT=$SMTP_PORT \
-    -e IMAP_HOST=$IMAP_HOST \
-    -e IMAP_PORT=$IMAP_PORT
+    -e SMTP_PORT=$SMTP_PORT
 ```
 
 ## Contributing
