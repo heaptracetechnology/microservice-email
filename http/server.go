@@ -21,12 +21,6 @@ func (s Server) Start() error {
 			},
 		},
 		Route{
-			"ReceiveEmail",
-			"POST",
-			"/receive",
-			ReceiveHandler{},
-		},
-		Route{
 			"Healthcheck",
 			"Get",
 			"/healthcheck",

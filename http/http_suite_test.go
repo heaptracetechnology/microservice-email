@@ -6,14 +6,12 @@ import (
 	"testing"
 
 	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/reporters"
 	. "github.com/onsi/gomega"
 )
 
 func TestHTTPSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("../test-report/cireport.txt")
-	RunSpecsWithDefaultAndCustomReporters(t, "HTTP Suite", []Reporter{junitReporter})
+	RunSpecs(t, "HTTP Suite")
 }
 
 func getEnvOrError(env string) string {
